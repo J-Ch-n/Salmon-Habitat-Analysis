@@ -15,7 +15,7 @@ To start, set your working directory and load the necessary libraries.
 
 ```{r, message = F, warning = F}
 
-setwd("/Users/jiashuchen/salmon-research/rintro")
+setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/rintro")
 
 library(tidyverse)
 
