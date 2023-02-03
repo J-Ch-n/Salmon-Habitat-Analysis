@@ -1,0 +1,377 @@
+---
+title: "Intro to R Workshop - Part 2"
+author: "Rachael Ryan"
+date: '2023-01-14'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction
+
+This is the second part of our introductory workshop in R, where we will dive into "data wrangling", learning how to use functions to summarize, clean, edit, and plot our data.
+
+To start, set your working directory and load the necessary libraries.
+
+```{r, message = F, warning = F}
+
+setwd("/Users/jiashuchen/salmon-research/rintro")
+
+library(tidyverse)
+
+```
+
+Tidyverse package is a complex package that encompasses a number of other packages such as ggplot2 (for plotting), dplyr (for data wrangling), tibble (for tables) and more. We'll use this and also the piping syntax, which looks like %\>% and is *one* type of syntax you can use, but feel free to use whatever works best for you. We'll go over this in the code.
+
+Next, let's read in our invertebrate data that we'll be working with using the tidyverse function `read_csv`.
+
+```{r}
+
+inverts <- read_csv("drift_simple_2021.csv")
+
+# note when we run this function, you can see what kind each column is
+view(inverts)
+
+
+```
+
+# Section 1: Data Wrangling
+
+Let's explore some of the functions tidyverse has to answer some questions about the data. Here are some functions we will use:
+
+-   filter()
+-   summarize()
+-   group_by()
+-   mutate()
+
+These are all listed on the cheatsheets sent, which can also be found online. We'll use them to answer a few questions about the data:
+
+1.  Which site had the highest biomass in June?
+2.  How many Chironimidae were in Olema in total?
+3.  What is the average biomass in a pool at each site?
+
+## Q1: Which site had the highest biomass in June?
+
+To answer this question we need to use a few functions.
+
+-   filter() for June
+-   group_by() site
+-   summarize() the total biomass for each site
+-   arrange() to sort with the highest biomass at the top
+
+There are many different ways to do this, but here I will demonstrate just one sequence of functions you can use.
+
+```{r}
+
+# run this
+
+inverts %>% 
+  filter(month == "Jun") %>%   # filter in the column we are interested in (month) and match the category we want (June)
+  group_by(Site) %>%    # we are putting everything under the same site into one bin - you could group by more than one variable
+  summarize(total_biomass = sum(mass_mg)) # we are creating a column called total_biomass that is summing all biomass (mass_mg in our table) within a site
+
+```
+
+What happened?
+
+We came up with NAs because you cannot add NA to a number. Let's go back into our code and remove the NAs.
+
+```{r}
+
+# run this
+
+inverts %>% 
+  filter(month == "Jun") %>% 
+  group_by(Site) %>% 
+  summarize(total_biomass = sum(mass_mg, na.rm = T)) # in the sum function we can add a line that says remove NA = TRUE 
+
+
+# can save this into an object for us to use later
+
+june_biomass <- inverts %>% 
+  filter(month == "Jun") %>% 
+  group_by(Site) %>% 
+  summarize(total_biomass = sum(mass_mg, na.rm = T)) 
+
+```
+
+This gives us a simple table with our total biomass for each site in June. To find the site with the highest biomass, we could sort our table in descending order.
+
+```{r}
+
+# sort to find max biomass
+
+june_biomass %>% 
+  arrange(-total_biomass) # arrange will sort the dataframe in ascending or descending order based on the column values you give it; here we use -total_biomass because the default is set to ascending order and we want descending order!
+
+```
+
+Great! We now know that the site LAG2 had the highest biomass across its three pools in June as compared to our other sites.
+
+## Q2: How many Chironomidae were in Olema total?
+
+Now we want to know how many organisms in a specific family, Chironomidae (midges) were in Olema Creek over the entire summer. For this we can use similar functions - any ideas on how to approach?
+
+-   filter() for Olema Creek, Chironomidae
+-   summarize() the number of lines
+
+```{r}
+
+# run this code
+
+inverts %>% 
+  filter(Site == "OL" & Family == "Chironimidae") %>%  # using the & we can filter for two different variables
+  summarize(number_chiros = n()) # make a column for number of Chironomids, and count the number of rows using n()
+  
+```
+
+What happened?
+
+Go back into the datatable and we can see that there is a spelling error. The filter function is super sensitive - let's try this again.
+
+```{r}
+
+inverts %>% 
+  filter(Site == "OL" & Family == "Chironomidae") %>% # corrected the spelling
+  summarize(number_chiros = n())
+
+```
+
+Wonderful, now we know the number of Chironomidae we caught in the drift in Olema throughout the summer!
+
+## Q3: What is the average biomass in a pool at each site?
+
+Suppose now we want to calculate the average biomass *in a pool* at each site, across all months. What functions can we use?
+
+-   group_by() site, site-seq, month
+-   mutate() to create a new column that uses an operation over other columns
+-   summarize() to calculate the average and create a new table
+
+```{r}
+
+# start with this
+
+inverts %>% 
+  group_by(Site_Seq, month) %>%  # group by Site-Seq and month to collapse all biomass within a pool during a month
+  mutate(total_biomass = sum(mass_mg, na.rm = T)) # find the total biomass for each pool, at each month
+
+# save as an object
+
+pool_biomass <- inverts %>% 
+  group_by(Site_Seq, month) %>%  
+  mutate(total_biomass = sum(mass_mg, na.rm = T))
+
+```
+
+Right now we have the total biomass for each pool, for each month. Now we want to calculate the average for each site.
+
+```{r}
+
+pool_biomass %>% 
+  group_by(Site) %>%  # now we want to collapse by Site
+  summarize(avg_biomass_pool = mean(total_biomass, na.rm = T)) # for each site, find the mean biomass across all pools and months
+
+```
+
+Great, we now can see the average biomass within a pool over all months for each site.
+
+Why didn't we make it simpler?
+
+```{r}
+
+inverts %>% 
+  group_by(Site) %>% 
+  summarize(avg = mean(mass_mg, na.rm = T))
+
+```
+
+This gives the average biomass for an invertebrate across all pools and months, which is different from total biomass within a pool!
+
+## Challenge question
+
+Let's put your skills to test. **Your challenge is to create a table that has the total biomass per site-seq of all orders for each month. Your table should be ordered by month and have the following headers: Site_Seq, Site, month, Order, total_biomass.**
+
+Try it out!
+
+```{r try it out}
+
+
+
+```
+
+Your table and code should look something like this:
+
+```{r, message = FALSE}
+
+order_biomass <- inverts %>% 
+  group_by(Site_Seq, Site, month, Order) %>% 
+  summarize(total_biomass = sum(mass_mg, na.rm = T)) %>% 
+  arrange(desc(month))
+
+view(order_biomass) # check out our final table
+
+```
+
+## Other useful functions
+
+We only covered here a small subsection of useful functions. Refer to the tidyverse cheatsheets or look online for other functions you may use. All packages have documentation and examples for each function which you can access online or within RStudio by using `?mutate()` in your coding block, for example. Here are a few other functions you might commonly use:
+
+-   rename() for renaming columns
+-   as_factor() and other similar functions for changing the *type* of column (e.g. from character to factor, from character to numeric)
+-   select() allows you to select only specific columns for your output table (e.g. if you wanted to drop Site, you could do select(-Site))
+-   pivot_longer() and pivot_wider() are super useful for changing the structure of the data to tidy or wide data; tidy data is where each observation is a row and is helpful to group and mutate (is our data currently in tidy or wide format?)
+-   replace_na() is great when you want to replace NAs with something like `0`
+
+# Section 2: Plotting
+
+Now that we know how to group the data in certain ways and make calculations, let's try out some plotting. We will do all our plotting using the `ggplot2` package, found within the tidyverse package.
+
+## Basic Plotting
+
+Let's start with basic plotting to understand the ggplot2 basic functions and structure. We will use our order_biomass table to plot.
+
+```{r}
+
+ggplot(order_biomass, aes(Site, total_biomass)) + # data we want to use, then within aes() we put our x and y arguments
+  geom_point()      # we need to tell it what kind of plot we want, in this case we chose points arranged by site
+
+```
+
+We should have a figure with each biomass value plotted as a point, separated out by Site. This isn't the most informative way to show this data though, what if we wanted to see the average biomass of an Order, per site?
+
+```{r}
+
+ggplot(order_biomass, aes(Site, total_biomass)) +
+  geom_boxplot() # change the plot type to boxplot where it will take all the points within a site and find the median, lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles)
+
+```
+
+This is a little more interesting, but still not very informative. Let's say instead we want to see how much each Order contributes to the biomass of a site, and separate it by the month.
+
+```{r}
+
+ggplot(order_biomass, aes(Site, total_biomass, fill = Order)) +  # the fill command means the colours filled in will be according to Order
+  geom_col(position = "stack") +     # geom_col makes it a bar plot, and the stack position stacks the Orders on top of one another to see how they make up the total biomass
+  facet_wrap(~month, nrow = 3) # facet_wrap separates the plots based on a variable, so here we have the different months
+
+```
+
+This is starting to look more interesting!
+
+## Advanced Plotting
+
+Now that we have a more useful plot, we can work on cleaning it up to look nicer. The nice thing about ggplot is that you can add as many adjustments as you need to the original figure, using `+` at the end of each line.
+
+Let's save the plot we just made as an object.
+
+```{r}
+
+order_plot <- ggplot(order_biomass, aes(Site, total_biomass, fill = Order)) +  
+  geom_col(position = "stack") +    
+  facet_wrap(~month, nrow = 3)
+
+```
+
+Now we can add to this figure, for starters, change the axis titles to be more specific, change the text angle, and increase axis title size.
+
+```{r}
+
+order_plot +
+  ylab("Biomass (mg)") +  # changes the y-axis title
+  theme(axis.title = element_text(size = 14), # theme can be used to nest many different functions around the axes, legend, background
+        axis.text.x = element_text(angle = 90)) # change the text angle for the x axis
+
+```
+
+The function `theme()` is this master function where a lot of other adjustments are made, but there are also default themes you can use that change many aspects of the plots.
+
+```{r}
+
+order_plot +
+  theme_bw() # the black and white default theme
+
+order_plot +
+  theme_classic() # the classic theme with no lines
+
+order_plot +
+  theme_dark() # makes plot backgrounds dark
+
+```
+
+Another thing you can alter is the colour palette. Colours can either be input manually, or you can select a palette. For example, if we wanted to only include EPT organisms in our biomass count, we can filter for those orders and then assign them colours.
+
+Colours names, numbers, and palettes can all be found online or in different packages.
+
+```{r}
+
+order_biomass %>% 
+  filter(Order %in% c("Ephemeroptera", "Plecoptera", "Trichoptera")) %>%  # filter our Orders of interest before piping into ggplot
+  ggplot(aes(Site, total_biomass, fill = Order)) +
+  geom_col(position = "stack") +
+  facet_wrap(~month, nrow = 3) +
+  theme_bw() +
+   ylab("Biomass (mg)") +  
+  theme(axis.title = element_text(size = 14), 
+        axis.text.x = element_text(angle = 90)) +  # just run to here first to see the default colours
+  scale_fill_manual(values = c("deeppink3", "deepskyblue3", "darkorchid3")) # now try the manual scale we created
+
+```
+
+One popular colour package is `viridis` as it uses colourblind-friendly colours.
+
+```{r, message = F, warning = F}
+
+library(viridis)
+
+```
+
+Let's try the same plot, but using the viridis palette.
+
+```{r}
+
+order_biomass %>% 
+  filter(Order %in% c("Ephemeroptera", "Plecoptera", "Trichoptera")) %>%  
+  ggplot(aes(Site, total_biomass, fill = Order)) +
+  geom_col(position = "stack") +
+  facet_wrap(~month, nrow = 3) +
+  theme_bw() +
+   ylab("Biomass (mg)") +  
+  theme(axis.title = element_text(size = 14), 
+        axis.text.x = element_text(angle = 90)) +  
+  scale_fill_viridis(discrete = T) # the viridis package has its own scale functions
+
+```
+
+You can play around with a lot of these functions to make the plot look exactly how you'd like, changing the size of font, location of legend (or remove the legend), playing around with the facet headers - let your creativity run wild!
+
+## Challenge Plot
+
+Using the skills you've learned, your challenge is to **plot the median total biomass of a pool for each site, colour-coded by month**. You may need to go back to our original data and work through it.
+
+```{r try it out again}
+
+invert %>% 
+  filter()
+
+
+```
+
+There are many ways of doing it, but here is just one example of how we can get that figure.
+
+```{r answer, message = F}
+
+inverts %>% 
+  group_by(Site_Seq, Site, month) %>%  # grouping by Site_Seq and month to get pool biomass totals
+  summarize(total_biomass = sum(mass_mg, na.rm = T)) %>%  # summarizing pool biomass totals
+  mutate(month = factor(month, levels = c("May", "Jun", "Jul"))) %>% # making month a factor and reordering it to be chronological
+  ggplot(aes(Site, total_biomass, fill = month)) +  # fill by month so that month is colour-coded
+  geom_boxplot() +  # boxplot will gather all pools from a site and plot together, giving us the median and 25-75th quartile range
+  theme_bw() +
+   ylab("Biomass (mg)") +  
+  theme(axis.title = element_text(size = 14), 
+        legend.title = element_blank()) +  # getting rid of the legend title
+  scale_fill_viridis(discrete = T) 
+  
+```
+
+Now you have the basic tools to plot a wide range of data!
