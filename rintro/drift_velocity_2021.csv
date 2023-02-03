@@ -1,0 +1,45 @@
+SiteName,Date,TimeSet,TimeRetrieved,FocalVel_m_s,FocalDepth_cm,Placement_notes
+DG-SEQ1-2021,3/05/21,17:42,18:46,0,25,placed at cery head of pool (location of cam 1)
+DG-SEQ2-2021,3/05/21,17:06,18:01,0.017,52,"placed under log going through pool, on angle towards left bank as that appears to be direction of surface current, but ultimately no flow"
+DG-SEQ3-2021,3/05/21,16:38,17:35,0,17,"not quite at head of pool bc too shallow/cannot acces with wood, but coho are drift foraging there -- very little drift (pygmy could not pick it up)"
+LAG1-SEQ1-2021,6/05/21,17:00,18:00,0.148,90,"same as cam 1 but closer to center of pool, slightly behind log"
+LAG1-SEQ2-2021,6/05/21,16:15,17:15,0.112,38,camera 1 location
+LAG1-SEQ3-2021,7/05/21,16:00,17:00,0.149,54,same as cam 1
+LAG2-SEQ1-2021,2/05/21,16:20,17:22,0.285,66,"set right at root wad, was a little behind very head of pool bc of bedrock, had to adjust --can use fish velocity for cam 1; made date in May for ease of parsing"
+LAG2-SEQ2-2021,2/05/21,18:37,19:11,0.146,96,"b/w logs crossing pool where velocity at head was taken, camera at head; did not take depth but using June value; made date in May for ease of parsing"
+LAG2-SEQ3-2021,2/05/21,17:18,18:48,0.141,52,"Deployed in area by tree, sand patch, in front of CAM (H); did not take depth but taking June value; made date in May for ease of parsing"
+OL-SEQ1-2021,5/05/21,15:14,16:16,0.063,36,head of pool near left bank where cam 1 was set
+OL-SEQ2-2021,5/05/21,17:02,17:58,0.068,43,head of pool where camera 1 was placed
+OL-SEQ3-2021,5/05/21,16:11,17:09,0.138,37,"head of pool where camera 1 was, in between live trees"
+SG-SEQ1-2021,8/05/21,15:39,16:39,0.065,25,"head of pool, same as cam 1"
+SG-SEQ2-2021,8/05/21,16:25,17:25,0.031,13,"right at head of pool, just u/s from cam 1 placement"
+SG-SEQ3-2021,8/05/21,15:15,16:15,0.41,11,very head of pool in shallow riffle/pool transition
+DG-SEQ1-2021,1/06/21,15:54,16:54,0,23,"At head of pool, similar to May but no flow; river otter came through while net set"
+DG-SEQ2-2021,1/06/21,15:00,16:10,0,73,"No flow, in same location and facing same direction as May but did not catch much; river otter came through while net set"
+DG-SEQ3-2021,1/06/21,16:36,17:35,0,14,same as cam 1 in slight depression
+LAG1-SEQ1-2021,3/06/21,16:18,17:18,0.059,57,"right behind fallen log to the LB where more coho observed, slower flow"
+LAG1-SEQ2-2021,3/06/21,16:01,17:10,0.119,49,"same as cam 1, right behind fallen log, closer to right bank"
+LAG1-SEQ3-2021,3/06/21,14:59,16:04,0.116,53,"head of pool where two riffles converge, next to overhanging branches (slightly closer to RB but fairly center)"
+LAG2-SEQ1-2021,1/06/21,17:00,17:58,0.107,64,right u/s of cam 1 at tip of root wad; changed to Jun 1st instead of May 31 for ease of parsing
+LAG2-SEQ2-2021,1/06/21,17:56,19:00,0.17,96,"b/w fallen logs, where cam 1 was; changed to Jun 1st instead of May 31 for ease of parsing"
+LAG2-SEQ3-2021,1/06/21,19:15,20:13,0.188,52,"Head of pool, undercut RB, same loc as cam 1; changed to Jun 1st instead of May 31 for ease of parsing"
+OL-SEQ1-2021,2/06/21,16:16,17:18,0.053,29,head of pool right by temp logger where cam 1 was set
+OL-SEQ2-2021,2/06/21,17:00,18:00,0.022,35,head of pool close to RB where there is a depression
+OL-SEQ3-2021,2/06/21,15:49,16:49,0.083,40,very head of pool; fell over at some point but was corrected
+SG-SEQ1-2021,5/06/21,16:27,17:30,0.023,17,"right at head where riffle comes in, along RB, super shallow"
+SG-SEQ2-2021,5/06/21,17:07,18:07,0.038,18,very head of pool in very shallow area
+SG-SEQ3-2021,5/06/21,15:52,16:54,0.061,13,"right at head of pool, lodged b/w stump and RB, shallow"
+DG-SEQ1-2021,28/07/21,14:29,15:29,0,18,further d/s than previous months because no water
+DG-SEQ2-2021,28/07/21,15:04,16:10,0,25,"just off of log facing u/s and LB direction, same location as cam 1; **might have lost some of the sample as coho got stuck in net :( had to save it**"
+LAG1-SEQ1-2021,27/07/21,16:09,17:13,0.149,77,"shifted to in front of log, centre of stream because more fish foraging there with reduced velocity (as compared to May/June)"
+LAG1-SEQ2-2021,27/07/21,16:05,17:05,0.176,46,"used VD2 this time (changed from previous months), slightly more towards LB in thalweg"
+LAG1-SEQ3-2021,27/07/21,17:27,18:40,0.222,44,"closer to LB in thalweg, slightly more u/s than previously"
+LAG2-SEQ1-2021,26/07/21,17:23,18:25,0.186,56,same spot as previous months
+LAG2-SEQ2-2021,26/07/21,17:18,18:20,0.049,87,same spot as previous months
+LAG2-SEQ3-2021,26/07/21,15:47,16:47,0.075,52,"centre of pool at same point centrally as temp logger, in thalweg at head of pool (slightly further from RB than previous months)"
+OL-SEQ1-2021,25/07/21,14:54,15:56,0,21,"head of pool between sticks and fallen log but no flow, fell over at the end"
+OL-SEQ2-2021,25/07/21,14:52,15:54,0.027,16,"water levels very low here now, aquatic veg being pushed into net by small flow"
+OL-SEQ3-2021,25/07/21,16:20,17:20,0.073,8.5,"at very head of pool, very shallow; **velocity is surface flow**"
+SG-SEQ1-2021,24/07/21,16:15,17:19,0,8,"at head of pool, very shallow"
+SG-SEQ2-2021,24/07/21,15:00,16:02,0,15,"No flow, head of pool drying up so placed slightly more downstream than previously, where it is a bit deeper (same location more or less)"
+SG-SEQ3-2021,24/07/21,15:30,16:34,0,34,"a head of pool, slightly more d/s than previously because of low water levels, in same location as cam 1 in May/June"

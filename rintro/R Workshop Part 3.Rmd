@@ -1,0 +1,318 @@
+---
+title: "Intro to R Workshop - Part 3"
+author: "Rachael Ryan"
+date: '2023-02-02'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction
+
+This is the third part of our introductory workshop in R, where we will try out some basic statistics to answer ecological questions. We will start with joining data tables to make more complex tables, then try out basic linear models and some advanced versions, then end with ANOVAs and some advanced versions.
+
+To start, set your working directory and load the necessary libraries.
+
+```{r, message = F, warning = F}
+
+setwd("C:/Users/racha/Desktop/R Help/R workshop")
+
+library(tidyverse)
+library(lubridate)
+
+```
+
+Load in the data sets we will be using. We have our invertebrate data that has biomass in the drift, and now we are adding data that contains physical habitat information about each drift set, including velocity, time, and depth.
+
+```{r}
+
+# read in time sheet for each drift net set
+
+drift_set <- read_csv("drift_velocity_2021.csv")
+
+
+# read in data for drift invertebrates
+
+inverts <- read_csv("drift_simple_2021.csv")
+
+# view both data sets and notice the differences between the two
+
+view(drift_set)
+view(inverts)
+
+```
+
+
+
+# Section 1: Joining data tables
+
+Before we do any statistics, let's combine our two data tables so we have one data set with the invertebrates found at each site, and the physical habitat attributes of that site. To do this, we use the family of join functions: `full_join()`, `left_join()`, `inner_join()`, `right_join()`. These functions find the similar columns and variables between two data sets (e.g. "Site_Seq") and join the data based on the matching data. 
+
+Below, I show an example of cleaning up our drift_set data to match columns in inverts, and then join them together.
+
+```{r, message = F}
+
+area <- 0.3*0.3 # creating an area object for the size of the drift net, to add as a column
+
+# format date, Site-Seq, add column for area, calculate time in water - allows us to join the tables and also gives us more relevant information
+# you can take this step by step to see what each line is doing
+
+drift_full <- drift_set %>% 
+  mutate(Date = dmy(Date)) %>%  # making our date column into a true date - we can talk about dates but they are a whole other beast
+  separate(SiteName, c("Site", "Seq", "FieldSeason")) %>% # notice that the Site_Seq does not match up to inverts, so we separate the column to reconfigure it
+  mutate(month = month(Date, label = TRUE)) %>%  # convert the number of the month to the name
+        unite("Site_Seq", Site:Seq,  sep = "-", remove = F) %>% # create Site_Seq column similar to inverts
+  mutate(Area = area) %>%  # add in a whole column with area, it is the same for every Site_Seq
+  mutate(Time_s = TimeRetrieved-TimeSet,  # find total time drift was in the water
+         Time_s = as.numeric(Time_s)) %>% # convert from difftime to numeric, just the format you get when subtracting times
+  select(-Date) %>%  # our dates are slightly modified between the two datasets, this will create an issue when joining
+  full_join(., inverts)  # now we join the drift_set table we've been working on, indicated by the ., to the inverts table using full_join to capture all rows in each dataset, even if they don't have a match
+
+# view our object and what we created
+
+view(drift_full)
+
+```
+
+Almost done with formatting the data. Since we are working with invertebrates in the drift, we want to use the velocity of the drift, biomass, and area of the net to calculate flux and concentration. 
+
+```{r}
+
+# calculate flux for each Site-Seq for each month by adding up the mg and dividing by Time_s & discharge by multiplying vel by area, then divide flux by discharge to get concentration
+
+drift_conc <- drift_full %>% 
+  group_by(Site_Seq, month) %>% 
+  mutate(biomass = sum(mass_mg, na.rm = T),
+         flux = biomass/Time_s,  # divide total biomass per pool by the time set to get mg/s
+         discharge = FocalVel_m_s*Area,  # multiple velocity by area to get stream discharge in m^3/s
+         concentration = flux/discharge) %>%  # find the concentration of invertebrates in mg/m^3
+         mutate(Site = as_factor(Site),
+                month = as_factor(month)) %>%   # making these a factor for later analyses 
+         distinct(Site, Site_Seq, month, FocalVel_m_s, FocalDepth_cm, biomass, flux, discharge, concentration) # we only want the aggregated values for each site_seq at a certain month
+
+# view our new dataset
+view(drift_conc)
+
+```
+
+We now have a pretty detailed dataset we can use to ask questions. 
+
+
+
+# Section 2: Linear Models
+
+
+## Simple Linear Regression
+
+A linear regression is one of the most basic statistical models, but widely used. It analyses the relationship between a response variable (y) and one or more variables and their interactions (x or explanatory variables). 
+
+For example, we might want to see if flux of invertebrates is predicted by velocity.
+
+*Flux = a + Velocity x b*
+
+where "a" and "b" are the intercept and the slope; "a" is the value from where you start measuring (flux might be zero at a low velocity); "b" is the change in flux with respect to the change in velocity.
+
+
+In R, we calculate a linear regression using the `lm()` function. The code is mapped out accordingly:
+
+*lm([target] ~ [predictor], data = [data source])*
+
+Let's try it out.
+
+```{r}
+
+# write out the equation
+
+lm(flux ~ FocalVel_m_s, data = drift_conc)
+
+# output shows you the best estimates for the intercept and slope
+
+```
+
+To further explore the output of our model, we can make it an object and then use the `summary()` function.
+
+```{r}
+
+flux_lm <- lm(flux ~ FocalVel_m_s, data = drift_conc)
+
+summary(flux_lm)
+
+```
+
+In this output, we see the estimates again, but also the error associated with those estimates, the p-value, and the R^2 value. From this output, what can we learn?
+
+There does not appear to much relationship between biomass flux and velocity as the p-value is >0.05. We also see that the R^2 value is very low, indicating the model fit is low (<1% of variation in the data explained by the model). 
+
+We can plot this relationship to see if our model output makes sense.
+
+```{r, warning = F}
+
+ggplot(drift_conc, aes(FocalVel_m_s, flux)) +
+  geom_point() 
+
+```
+
+This checks out, there doesn't appear to be a strong correlation. We can also plot the predicted relationship by our model and see how this fits the data using the `stat_smooth()` function. 
+
+```{r, warning = F}
+
+ggplot(drift_conc, aes(FocalVel_m_s, flux)) +
+  geom_point() +
+  stat_smooth(method = "lm",
+              formula = y ~ x,
+              geom = "smooth")
+
+```
+
+Yikes, it doesn't look like there is any relationship.
+
+
+
+## Multiple Linear Regression
+
+Often we don't think our response variable is explained by a single explanatory variable. When a regression takes into account more than one explanatory variable, it is called a multiple linear regression. The equation is similar:
+
+*Flux = a + Velocity x b1 + Depth x b2*
+
+Now we have added depth as an explanatory variable, and it has an associated slope estimate as well. Let's try this out.
+
+```{r}
+
+flux_lm2 <- lm(flux ~ FocalVel_m_s + FocalDepth_cm, data = drift_conc)
+
+summary(flux_lm2)
+
+```
+
+In the output we now have an estimate for slope of each of our explanatory variables. Each has a small estimate, and a p-value >0.05, in this case, a very high p-value, providing no evidence for depth and focal velocity influencing the flux of invertebrates.
+
+Our model fit is very poor (<1% explained), but if we wanted to check the model fit visually, we can plot the residuals in a simple plot. Even if the model fit is good, the residuals should be randomly distributed - if not, that indicates you may have some underlying patterns occurring and you should transform your data (log-transform, quadratic, square-root, etc.). We won't get into this too much, but it is important for assessing model fit if you feel you have a strong model!
+
+```{r}
+
+plot(flux_lm2$residuals)
+
+```
+
+If we wanted, we could keep adding variables to our regression. Typically, you start with all the variables you *have a hypothesis for* and then run models that can compare and break down the variables. We won't cover this today, but just be aware that with multiple variables there is a process to select which ones are the most influential and explain the most variation, while decreasing the complexity.
+
+
+Be aware that there are multiple assumptions that go into each model, and it is important to look up and understand these assumptions before proceeding! Other issues that may come up are:
+
+- including categorical predictor variables
+- random vs fixed effects
+- non-normally distributed response data (different ways of assessing and handling this)
+
+
+
+# Setion 3: Analysis of Variance
+
+In the previous section, we wanted to understand how a response variable, y, could be predicted by one or more predictor variables (usually continuous, in the examples we had). What if we just wanted to know how our response variable differed between categorical independent variables?
+
+For example, let's say we want to know if our total biomass in a pool for each site actually differs between sites? 
+
+For this question, we can use an Analysis of Variance (ANOVA) which is a statistical test to see if the means of each category differ from the overall mean of the data, determined by checking the variance of each individual group against the variance of the overall data. We have two hypotheses:
+
+*H0 = The means of each site are not different from one another, all group means are equal*
+
+*Ha = The means of each site are different from one another (at least one!)*
+
+
+There are some assumptions that must be met to perform an ANOVA:
+
+- the dependent variable must be continuous
+- independent variables must be categorical
+- assumes data is normally distributed
+- assumes homogeneity of variance (variance among groups is equal)
+- observations are independent of one another
+
+Before carrying out an analysis, you should make sure these assumptions are all met. This can be done with histograms and different normality tests such as shapiro test, levene's test for variance comparisons, etc. but for today's purposes, we'll pretend we meet the assumptions and continue on.
+
+
+## One-way ANOVA
+
+The basic ANOVA is a one-way ANOVA, where we have only *one* independent categorical variable. In this case, we will use Site.
+
+```{r}
+
+site.biomass <- aov(biomass ~ Site, data = drift_conc) # aov() function to run th anova, with response variable on the left
+
+summary(site.biomass) # check the summary
+
+```
+
+The model summary first lists the independent variables being tested in the model (in this case we have only one, ‘Site’) and the model residuals (‘Residual’). All of the variation that is not explained by the independent variables is called residual variance (explanation taken from https://www.scribbr.com/statistics/anova-in-r/).
+
+The rest of the values in the output table describe the independent variable and the residuals:
+
+- The Df column displays the degrees of freedom for the independent variable (the number of levels in the variable minus 1), and the degrees of freedom for the residuals (the total number of observations minus one and minus the number of levels in the independent variables).
+- The Sum Sq column displays the sum of squares (a.k.a. the total variation between the group means and the overall mean).
+- The Mean Sq column is the mean of the sum of squares, calculated by dividing the sum of squares by the degrees of freedom for each parameter.
+- The F value column is the test statistic from the F test. This is the mean square of each independent variable divided by the mean square of the residuals. The larger the F value, the more likely it is that the variation caused by the independent variable is real and not due to chance.
+- The Pr(>F) column is the p value of the F statistic. This shows how likely it is that the F value calculated from the test would have occurred if the null hypothesis of no difference among group means were true.
+
+
+In our model, it looks like the means are all equal. 
+
+
+## Two-way ANOVA
+
+When we plotted the biomass data, it did not look like the means were all equal, at least not if you broke them up into months. That's where we can add a *second* independent variable to see if our biomass data is the same across sites and months. This is called a two-way ANOVA and works similarly.
+
+```{r}
+
+site.month.biomass <- aov(biomass ~ Site + month, data = drift_conc) # add in month as a categorical independent variable
+
+summary(site.month.biomass) # check the summary
+
+```
+
+In this summary, we see that our residual variance went down slightly (meaning the model fits the data better), but our p-values are >0.05 meaning all the means are statistically the same.
+
+Sometimes, our two independent variables might have an interactive effect. For example, the month the samples were collected might change the relationship of Site and biomass. We can test for an interaction in the model using a `*` instead of a `+` between our independent variables.
+
+```{r}
+
+sitebymonth <- aov(biomass ~ Site * month, data = drift_conc)
+  
+summary(sitebymonth)
+
+```
+
+Our interaction term has a high sum of squares value, but a high p-value, indicating that while it seems to explain some of the variance in the data, it is not statistically significant.
+
+
+## Repeated Measures ANOVA
+
+In the previous example, we used month as a second independent variable. However, we went back to the same pool at three different time periods, which we could argue fits more of a repeated-measures ANOVA. A r-m ANOVA measures the same response variable from the same "individual" (in this case, a pool) at different points in time or under different conditions. This allows you to control for similarities in each pool across time points.
+
+R-M ANOVA can be one-way, two-way, or three-way. Since we still want to include Site, we will perform a two-way repeated-measures ANOVA.
+
+```{r}
+
+rm.anova <- aov(biomass ~  factor(Site) + factor(month) + Error(factor(Site_Seq)), data = drift_conc) # the error term includes our individual repeatedly measured, in this case, our pool
+
+summary(rm.anova)
+
+```
+
+Our results should that there are significant differences in the means between sites, between months, and for individual pools between months. 
+
+If we had a significant p-value, there are *post-hoc* tests that can be performed to find out which group is significantly different. 
+
+
+
+# Conclusion & advanced models
+
+To conclude, there are many different types of analyses you might perform with your data. This is just a small introduction. When selecting the best approach, you want to write out your question and hypotheses, and see what test is best given the assumptions and limitations. 
+
+Other tests you may explore:
+
+- occupancy models (whether something is present/absent and what governs that)
+- logistic regression (similar logic to linear models)
+- generalized additive models (builds on linear models)
+- generalized linear mixed models (builds on linear models)
+- principle components analysis (PCA) and other qualitative, ordination methods to group things in space
+
+...and many, many more!  
+
