@@ -2,8 +2,10 @@
 title: "Intro to R Workshop - Part 2"
 author: "Rachael Ryan"
 date: '2023-01-14'
-output: html_document
-editor_options: 
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
   chunk_output_type: console
 ---
 
@@ -18,7 +20,12 @@ To start, set your working directory and load the necessary libraries.
 setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/rintro")
 
 library(tidyverse)
-
+"""inverts %>% 
+  select(-order, -Family, -seq, -Date) %>% 
+  pivot_longer(names_from = order, 
+               values_from = mass_mg)
+"""
+  
 ```
 
 Tidyverse package is a complex package that encompasses a number of other packages such as ggplot2 (for plotting), dplyr (for data wrangling), tibble (for tables) and more. We'll use this and also the piping syntax, which looks like %\>% and is *one* type of syntax you can use, but feel free to use whatever works best for you. We'll go over this in the code.
@@ -61,15 +68,26 @@ To answer this question we need to use a few functions.
 
 There are many different ways to do this, but here I will demonstrate just one sequence of functions you can use.
 
+what order that have the highest biomass for each site sequence
+
 ```{r}
 
-# run this
 
 inverts %>% 
-  filter(month == "Jun") %>%   # filter in the column we are interested in (month) and match the category we want (June)
-  group_by(Site) %>%    # we are putting everything under the same site into one bin - you could group by more than one variable
-  summarize(total_biomass = sum(mass_mg)) # we are creating a column called total_biomass that is summing all biomass (mass_mg in our table) within a site
-
+  filter(month %in% c("Jun")) %>% 
+  group_by(Site, Order) %>% 
+  summarize(total_biomass = sum(mass_mg, na.rm = T)) %>%
+  group_by(Site) %>% 
+  filter(total_biomass == max(total_biomass))
+  
+# """
+# # run this
+# 
+# inverts %>% 
+#   filter(month == "Jun") %>%  # filter in the column we are interested in (month) and match the category we want (June)
+#   group_by(Site) %>%    # we are putting everything under the same site into one bin - you could group by more than one variable
+#   summarize(total_biomass = sum(mass_mg)) # we are creating a column called total_biomass that is summing all biomass (mass_mg in our table) within a site
+# """
 ```
 
 What happened?
@@ -151,15 +169,17 @@ Suppose now we want to calculate the average biomass *in a pool* at each site, a
 
 # start with this
 
-inverts %>% 
+pool_biomass <- inverts %>% 
   group_by(Site_Seq, month) %>%  # group by Site-Seq and month to collapse all biomass within a pool during a month
-  mutate(total_biomass = sum(mass_mg, na.rm = T)) # find the total biomass for each pool, at each month
+  mutate(total_biomass = sum(mass_mg, na.rm = T))  %>% # find the total biomass for each pool, at each month
+  summarize(avg_biomass = mean(total_biomass))
+
 
 # save as an object
 
-pool_biomass <- inverts %>% 
-  group_by(Site_Seq, month) %>%  
-  mutate(total_biomass = sum(mass_mg, na.rm = T))
+# pool_biomass <- inverts %>% 
+#   group_by(Site_Seq, month) %>%  
+#   mutate(total_biomass = sum(mass_mg, na.rm = T))
 
 ```
 
@@ -194,7 +214,23 @@ Let's put your skills to test. **Your challenge is to create a table that has th
 Try it out!
 
 ```{r try it out}
+order_biomass <- inverts %>% 
+  group_by(Site_Seq, 
+           Site, 
+           month, 
+           Order) %>%
+  summarize(total_biomass = sum(mass_mg, 
+                                na.rm = T)) %>% 
+  group_by(Site_Seq, 
+           Site, 
+           month) %>%
+  filter(total_biomass == max(total_biomass)) %>% 
+  arrange(desc(month))
 
+
+view(order_biomass)
+  
+  
 
 
 ```
@@ -231,8 +267,7 @@ Now that we know how to group the data in certain ways and make calculations, le
 Let's start with basic plotting to understand the ggplot2 basic functions and structure. We will use our order_biomass table to plot.
 
 ```{r}
-
-ggplot(order_biomass, aes(Site, total_biomass)) + # data we want to use, then within aes() we put our x and y arguments
+ggplot(order_biomass, aes(Site, total_biomass, color = as_factor(Site))) + # data we want to use, then within aes() we put our x and y arguments
   geom_point()      # we need to tell it what kind of plot we want, in this case we chose points arranged by site
 
 ```
@@ -241,8 +276,9 @@ We should have a figure with each biomass value plotted as a point, separated ou
 
 ```{r}
 
-ggplot(order_biomass, aes(Site, total_biomass)) +
-  geom_boxplot() # change the plot type to boxplot where it will take all the points within a site and find the median, lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles)
+ggplot(order_biomass, aes(x = Site, y = total_biomass)) +
+  geom_boxplot() +
+  theme_bw() # change the plot type to boxplot where it will take all the points within a site and find the median, lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles)
 
 ```
 
@@ -267,7 +303,7 @@ Let's save the plot we just made as an object.
 ```{r}
 
 order_plot <- ggplot(order_biomass, aes(Site, total_biomass, fill = Order)) +  
-  geom_col(position = "stack") +    
+  geom_col(position = "stack") +  
   facet_wrap(~month, nrow = 3)
 
 ```
@@ -279,7 +315,8 @@ Now we can add to this figure, for starters, change the axis titles to be more s
 order_plot +
   ylab("Biomass (mg)") +  # changes the y-axis title
   theme(axis.title = element_text(size = 14), # theme can be used to nest many different functions around the axes, legend, background
-        axis.text.x = element_text(angle = 90)) # change the text angle for the x axis
+        axis.text.x = element_text(angle = 90), 
+        legend.key.height = unit(10, "points"))# change the text angle for the x axis
 
 ```
 
@@ -351,7 +388,9 @@ Using the skills you've learned, your challenge is to **plot the median total bi
 ```{r try it out again}
 
 invert %>% 
-  filter()
+  group_by(Site, month) %>% 
+  summarize(total_biomass = sum(total_biomass, na.rm = T)) %>%
+  ggplot(aes(x = me))
 
 
 ```
