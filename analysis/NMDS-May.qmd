@@ -1,0 +1,43 @@
+---
+title: "NMDS-May"
+author: "Jiashu Chen"
+format: html
+editor: visual
+---
+
+## NMDS Exploratory Analysis For May Habitat Sites
+
+### Data Input
+
+#### Schema
+
+-   Canopy
+
+-   Shelter
+
+-   Vol
+
+-   Max_temp
+
+-   Max_DO
+
+-   Max_vel
+
+-   Max_RCTdepth
+
+```{r, warning=false, message=false}
+# Load Packages
+library(tidyverse)
+library(vegan)
+# Set Working Directory
+setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
+# Load Data Sets
+lag21_hab_may <- read_csv("LAG21_Habitat_May_Oct.csv")
+lag21_shelter <- read_csv("LAG21_InstreamShelter.csv")
+```
+
+```{r}
+#Clean up data, calculate Vol, max_temp, max_do, max_vel, max_rctdepth
+lag21_hab_may %>% 
+
+```
