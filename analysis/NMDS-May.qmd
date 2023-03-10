@@ -29,15 +29,78 @@ editor: visual
 # Load Packages
 library(tidyverse)
 library(vegan)
+library(lubridate)
 # Set Working Directory
 setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
+
+```
+
+```{r, warning=false, message=false, echo=false}
 # Load Data Sets
-lag21_hab_may <- read_csv("LAG21_Habitat_May_Oct.csv")
+lag21_hab_may_oct <- read_csv("LAG21_Habitat_May_Oct.csv")
 lag21_shelter <- read_csv("LAG21_InstreamShelter.csv")
+
+#Filter to retain only May sites
+#Clean up data, calculate Vol, max_temp, max_do, max_vel, max_rctdepth
+lag21_hab_may_oct[7, 2] = '02/05/21' 
+
+#Remove space and parentheses
+names(lag21_hab_may_oct)<-str_replace_all(names(lag21_hab_may_oct), c(" " = "", "\\(DD/MM/YY\\)" = ""))
+#Remove space and parentheses
+names(lag21_shelter)<-str_replace_all(names(lag21_shelter), c(" " = "", "\\(0\\-3\\)" = ""))
+
+#Clean up data and select useful data columns
+###Replaced na with 0###
+clean_lag21_hab_shelter <- lag21_hab_may_oct  %>% 
+  drop_na(Date) %>%
+  mutate(Date = dmy(Date)) %>% 
+  filter(month(Date) == 5) %>% 
+  rowwise() %>% 
+  mutate(Max_vel = max(c_across(c(Vel0_ms, 
+                                  Vel1_ms, 
+                                  Vel2_ms, 
+                                  Vel3_ms, 
+                                  Vel4_ms, 
+                                  Vel5_ms)), 
+                       na.rm = T)) %>%
+  mutate(across(c(Width3_m, Length_m), as.double)) %>% 
+  mutate(Median_width_m = median(c_across(c(Width0_m, 
+                                     Width1_m,
+                                     Width2_m, 
+                                     Width3_m, 
+                                     Width4_m,
+                                     Width5_m)),
+                          na.rm = T)) %>% 
+  mutate(Median_depth_m = median(c_across(c(Depth0_cm, 
+                                     Depth1_cm,
+                                     Depth2_cm, 
+                                     Depth3_cm,
+                                     Depth4_cm,
+                                     Depth5_cm)),
+                          na.rm = T) / 100) %>% 
+  mutate(Vol_m3 = Length_m * Median_depth_m * Median_width_m) %>% 
+  inner_join(lag21_shelter, 
+             by = join_by(SiteName == SiteName),
+             suffix = c('.hab', '.shelter')) %>%
+  mutate(canopy_total = Canopy_Head + Canopy_Mid, 
+         DO_Percent = as.double(DO_Percent),
+         Temperature_C = as.double(Temperature_C)) %>% 
+  select(SiteName, Date, Shelter_Value, 
+         Vol_m3, Temperature_C, DO_Percent,
+         Max_vel, RCTdepth_cm) %>% 
+  mutate_all(~replace_na(., 0))
+view(clean_lag21_hab_shelter)
 ```
 
 ```{r}
-#Clean up data, calculate Vol, max_temp, max_do, max_vel, max_rctdepth
-lag21_hab_may %>% 
+#Random Initial Placement NMDS
+#Shuffle rows
+clean_lag21_hab_shelter <- clean_lag21_hab_shelter[sample(nrow(clean_lag21_hab_shelter)),] 
+nmds_lag21 <- clean_lag21_hab_shelter %>% 
+  select(-c(SiteName, Date)) %>% 
+  metaMDS(distance = "bray", k = 3, trymax = 200, plot = F)
+nmds_lag21
+stressplot(nmds_lag21)
+ordiplot(nmds_lag21)
 
 ```
