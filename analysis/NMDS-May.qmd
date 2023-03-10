@@ -25,7 +25,7 @@ editor: visual
 
 -   Max_RCTdepth
 
-```{r, warning=false, message=false}
+```{r, warning=FALSE, message=FALSE}
 # Load Packages
 library(tidyverse)
 library(vegan)
@@ -35,7 +35,7 @@ setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
 
 ```
 
-```{r, warning=false, message=false, echo=false}
+```{r, warning=FALSE, message=FALSE}
 # Load Data Sets
 lag21_hab_may_oct <- read_csv("LAG21_Habitat_May_Oct.csv")
 lag21_shelter <- read_csv("LAG21_InstreamShelter.csv")
@@ -92,7 +92,7 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
 view(clean_lag21_hab_shelter)
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Random Initial Placement NMDS
 #Shuffle rows
 clean_lag21_hab_shelter <- clean_lag21_hab_shelter[sample(nrow(clean_lag21_hab_shelter)),] 
