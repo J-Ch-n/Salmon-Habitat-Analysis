@@ -63,11 +63,9 @@ convert_to_avg <- function(col) {
       if (any(str_detect(cell, "\\d+ \\(.*\\)"), na.rm = T)) {
         num = as.double(unlist(str_extract_all(cell, "(\\d+\\.\\d+)")))
         cell = mean(num)
-        #print(c(num, cell))
       } else if (any(str_detect(cell, "\\d+m"), na.rm = T)) {
         num = as.double(unlist(str_extract_all(cell, "\\d+")))
-        cell = mean(num) 
-        #print(c(num, cell))
+        cell = mean(num)
       }
      
       result = c(result, cell)
@@ -117,17 +115,17 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     # SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
     TRUE ~ Length_m
     #(11 + 7)/2 = 9
-    )) %>% 
-  group_by(SiteName, Month) %>% 
+    )) %>%
+  arrange(Month, SiteName) %>%
   rowwise() %>% 
-  mutate(Max_vel = max(c_across(c(Vel0_ms, 
+  mutate(Max_vel = max(replace_na(c_across(c(Vel0_ms, 
                                   Vel1_ms, 
                                   Vel2_ms, 
                                   Vel3_ms, 
                                   Vel4_ms, 
-                                  Vel5_ms)), 
+                                  Vel5_ms)),
+                                  0), 
                        na.rm = T)) %>%
-  
   ###Change 31 of may to 1 of june; repeat any empty length with previous values.###
   mutate(Median_width_m = mean(c_across(c(Width0_m, 
                                      Width1_m,
@@ -150,14 +148,21 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   mutate(Canopy_total = (Canopy_Head + Canopy_Mid) / 2,  
          DO_Percent = as.double(DO_Percent),
          Temperature_C = as.double(Temperature_C)) %>% 
-  select(SiteName, Date, Shelter_Value, 
-         Vol_m3, Temperature_C, DO_Percent,
-         Max_vel, RCTdepth_cm, Canopy_total) %>% 
-  drop_na() #can be replaced with na = 0
-            #replace(is.na(.), 0)
+  select(SiteName, Date, Vol_m3, 
+         Temperature_C, DO_Percent,
+         Max_vel, RCTdepth_cm) %>% #exclude shelter and canopy
+  #drop_na() %>% #can be replaced with na = 0
+  replace(is.na(.), 0)
 view(clean_lag21_hab_shelter)
 ```
 
 ```{r}
 #PCA Chunk
+results <- clean_lag21_hab_shelter %>% 
+ select(-SiteName, -Date) %>% 
+ prcomp(scale = T)
+  
+  
+results$rotation <- -1*results$rotation
+results$rotation
 ```
