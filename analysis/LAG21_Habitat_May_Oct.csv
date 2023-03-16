@@ -1,35 +1,35 @@
 Site Name,Date (DD/MM/YY),Length_m,Width0_m,Width1_m,Width2_m,Width3_m,Width4_m,Width5_m,RCTdepth_cm,RCT_marked (Y),Temperature_C,DO_Percent,Depth0_cm,Depth1_cm,Depth2_cm,Depth3_cm,Depth4_cm,Depth5_cm,Vel0_ms,Vel1_ms,Vel2_ms,Vel3_ms,Vel4_ms,Vel5_ms,Notes on measuring depth & vel
-DG1-SEQ1-2021,03/05/21,7.1,,1.7,2.5,3.5,,,4,Y,13,80.7,,25,29,42,,,,0,0,0,,,0.066 velocity right at surface with riffle/pool trans. (measured May 17)
-DG1-SEQ2-2021,03/05/21,5.6,,4.4,4.4,2.8,,,2.5,Y,10.8,63.4,,46,80,58,,,,0.017,0,0,,,
-DG1-SEQ3-2021,03/05/21,6.3,,3.5,3.2,1.8,,,3,Y,12.9,83,,21.5,25.5,17,17,,,0,0,0,0,,
-LAG1-SEQ1-2021,06/05/21,30.5,,4,7.1,9.6,10.3,,17,Y,13.6,102.2,,41,84,90,86,86,,0.402,0.236,0.148,0.118,0.145,"1 at very head, hard to see exactly where riffle pours into pool; 2 in narrow part before log; 3 immediately d/s of log (effective ""head"" of pool); 4 at mid of pool near willow branches; 5 near end of pool by willows, still saw coho drift foraging"
-LAG1-SEQ2-2021,06/05/21,18,,7.2,6.7,7.6,,,13,Y,13.9,103.4,,48,52,38,,,,0.309,0.185,0.283,,,1 where it transitions to pool; 2 right behind logs in thalweg; 3 in middle of pool before it gets shallower
-LAG1-SEQ3-2021,07/05/21,37,,6,7.2,7.4,7.8,5.3,21,Y,14.1,102,,50,54,57,70,,,0.162,0.149,0.082,0.083,,
+DG1-SEQ1-2021,3/05/21,7.1,,1.7,2.5,3.5,,,4,Y,13,80.7,,25,29,42,,,,0,0,0,,,0.066 velocity right at surface with riffle/pool trans. (measured May 17)
+DG1-SEQ2-2021,3/05/21,5.6,,4.4,4.4,2.8,,,2.5,Y,10.8,63.4,,46,80,58,,,,0.017,0,0,,,
+DG1-SEQ3-2021,3/05/21,6.3,,3.5,3.2,1.8,,,3,Y,12.9,83,,21.5,25.5,17,17,,,0,0,0,0,,
+LAG1-SEQ1-2021,6/05/21,30.5,,4,7.1,9.6,10.3,,17,Y,13.6,102.2,,41,84,90,86,86,,0.402,0.236,0.148,0.118,0.145,"1 at very head, hard to see exactly where riffle pours into pool; 2 in narrow part before log; 3 immediately d/s of log (effective ""head"" of pool); 4 at mid of pool near willow branches; 5 near end of pool by willows, still saw coho drift foraging"
+LAG1-SEQ2-2021,6/05/21,18,,7.2,6.7,7.6,,,13,Y,13.9,103.4,,48,52,38,,,,0.309,0.185,0.283,,,1 where it transitions to pool; 2 right behind logs in thalweg; 3 in middle of pool before it gets shallower
+LAG1-SEQ3-2021,7/05/21,37,,6,7.2,7.4,7.8,5.3,21,Y,14.1,102,,50,54,57,70,,,0.162,0.149,0.082,0.083,,
 LAG2-SEQ1-2021,24/04/21 & 02/05/21,11.1,,6.6,5.7,8.3,8.5,,18,Y,13.5,103.6,,60,64,66,54,,,0.34,0.285,0.175,0.132,,"equipment not working, need to come back to redo cameras, inverts, velocity"
 LAG2-SEQ2-2021,24/04/21,34.5,,8.6,8.1,10.4,10.4,8.6,25,Y,12.8,104.2,,93,92,58,58,,,0.146,0.141,0.169,0.128,,2 velocity measures taken: one on april 24 and one on May 2nd; only measured depth in april
-LAG2-SEQ3-2021,24/04/21,22.7,,7.1,6.2,6.4,6.2,7,24,Y,9.58,27.35,,59,60,55,42,59,,0.046,0.037,0.068,0.202,0.097,fish foraging near tree at site 5
-OL-SEQ1-2021,05/05/21,13.4,,5.9,4.9,3.4,,,6,Y,16,87.2,,36,28,29,,,,0.063,0,0.053,,,
-OL-SEQ2-2021,05/05/21,22.1,,2.5,2.9,3.5,5.1,3.7,7,Y,15.4,89.2,,43,70,44,33,,,0.068,0,0,0,,
-OL-SEQ3-2021,05/05/21,17.8,,3.2,4.3,4.1,4.1,4.8,12,Y,13.8,84.2,,37,47,61,61,,,0.138,0,0,0,,
-SG-SEQ1-2021,08/05/21,9.5,,3.3,2.9,2.4,,,5.5,Y,12,81.3,,13,25,26,20,,,0.055,0.065,0.024,0,,
-SG-SEQ2-2021,08/05/21,40.3,,5.5,6.3,6.6,3,,8,Y,12,77,,13,61,26,72,19,,0.031,0,0,0,0,#5 is at tail end of pool
-SG-SEQ3-2021,08/05/21,58.4,,3.4,7,2.6,2.3,,7,Y,11.8,79.2,,11,41,56,73,34,,0.14,0,0,0,0,
+LAG2-SEQ3-2021,24/04/21,22.7,,7.1,6.2,6.4,6.2,7,24,Y,12.6,104.9,,59,60,55,42,59,,0.046,0.037,0.068,0.202,0.097,fish foraging near tree at site 5
+OL-SEQ1-2021,5/05/21,13.4,,5.9,4.9,3.4,,,6,Y,16,87.2,,36,28,29,,,,0.063,0,0.053,,,
+OL-SEQ2-2021,5/05/21,22.1,,2.5,2.9,3.5,5.1,3.7,7,Y,15.4,89.2,,43,70,44,33,,,0.068,0,0,0,,
+OL-SEQ3-2021,5/05/21,17.8,,3.2,4.3,4.1,4.1,4.8,12,Y,13.8,84.2,,37,47,61,61,,,0.138,0,0,0,,
+SG-SEQ1-2021,8/05/21,9.5,,3.3,2.9,2.4,,,5.5,Y,12,81.3,,13,25,26,20,,,0.055,0.065,0.024,0,,
+SG-SEQ2-2021,8/05/21,40.3,,5.5,6.3,6.6,3,,8,Y,12,77,,13,61,26,72,19,,0.031,0,0,0,0,#5 is at tail end of pool
+SG-SEQ3-2021,8/05/21,58.4,,3.4,7,2.6,2.3,,7,Y,11.8,79.2,,11,41,56,73,34,,0.14,0,0,0,0,
 ,,,,,,,,,,,,,,,,,,,,,,,,,
-DG-SEQ1-2021,01/06/21,,,2.2,4,7,,,5,Y,13.4,42,,23,30,39,,,,0,0,0,,,
-DG-SEQ2-2021,01/06/21,,,4.2,4.4,3,,,2,Y,13.2,45.6,,46,78,39,,,,0,0,0,,,
-DG-SEQ3-2021,01/06/21,,,3.3,1.6,1.7,,,2,Y,13.7,69.4,,19,25,14,16,,,0,0,0,0,,
-LAG1-SEQ1-2021,03/06/21,,,2.9,6,9.4,9,,15,Y,15.2,98,,37,68,73,83,83,,0.258,0.119,0.184,0.105,0.104,
-LAG1-SEQ2-2021,03/06/21,,,6.3,5.6,6.6,,,14,Y,15.2,100.2,,54,52,47,27,,,0.299,0.344,0.317,0.353,,VD4 in shallow run at tail end of pool (still seeing fish foraging)
-LAG1-SEQ3-2021,03/06/21,,,4.9,7.2,7.1,7.8,8.4,19,Y,15.6,101.4,,43,53,55,58,,,0.141,0.116,0.044,0.119,,
+DG-SEQ1-2021,1/06/21,,,2.2,4,7,,,5,Y,13.4,42,,23,30,39,,,,0,0,0,,,
+DG-SEQ2-2021,1/06/21,,,4.2,4.4,3,,,2,Y,13.2,45.6,,46,78,39,,,,0,0,0,,,
+DG-SEQ3-2021,1/06/21,,,3.3,1.6,1.7,,,2,Y,13.7,69.4,,19,25,14,16,,,0,0,0,0,,
+LAG1-SEQ1-2021,3/06/21,,,2.9,6,9.4,9,,15,Y,15.2,98,,37,68,73,83,83,,0.258,0.119,0.184,0.105,0.104,
+LAG1-SEQ2-2021,3/06/21,,,6.3,5.6,6.6,,,14,Y,15.2,100.2,,54,52,47,27,,,0.299,0.344,0.317,0.353,,VD4 in shallow run at tail end of pool (still seeing fish foraging)
+LAG1-SEQ3-2021,3/06/21,,,4.9,7.2,7.1,7.8,8.4,19,Y,15.6,101.4,,43,53,55,58,,,0.141,0.116,0.044,0.119,,
 LAG2-SEQ1-2021,31/05/21,,,6,3.4,7.4,8,,9,Y (remarked),15.2,102,,61,64,67,50,,,0.302,0.107,0.075,0,,"RCT missing, re-marked so might be different than previously marked RCT"
 LAG2-SEQ2-2021,31/05/21,,,8,8,9.3,9.5,9.9,23,Y,14.9,101.2,,96,91,64,57,,,0.17,0.102,0,0,,
 LAG2-SEQ3-2021,31/05/21,,,6.1,6.7,6,7.2,,20,Y,14.4,99.5,,52,55,50,42,,,0.188,0.14,0.044,0.065,,
-OL-SEQ1-2021,02/06/21,,,5.8,5.3,3.4,,,5,Y,17.2,81.7,,32,30,27,,,,0,0,0,,,
-OL-SEQ2-2021,02/06/21,,,4.3,3.6,4.8,3.5,,7,Y,14.2,84.8,,35,66,39,25,,,0.022,0,0,0,,
-OL-SEQ3-2021,02/06/21,,2.5,3,5,4.5,4.5,,11,N,14.9,79.1,40,41,51,66,70,,0.083,0.038,0,0,0,,"velocity meter struggled to move despite obvious flow at head, surface flow at head was 0.110, took new width and VD at head (W0, VD0)"
-SG-SEQ1-2021,05/06/21,,,3,3.3,2.4,,,4.5,Y,14.8,78.3,,17,26,25.5,20,,,0.023,0,0,0,,VD1 is surface velocity
-SG-SEQ2-2021,05/06/21,,,3.4,3.8,7.5,2.7,,6,Y,13.8,43.7,,18,65,35,72,26.5,,0.038,0,0,0,0,
-SG-SEQ3-2021,05/06/21,,,2,7.2,4.3,3.5,,4.5,Y,14.8,71.9,,13,36,76,39,48.5,,0.061,0,0,0,0,VD1 is surface velocity
+OL-SEQ1-2021,2/06/21,,,5.8,5.3,3.4,,,5,Y,17.2,81.7,,32,30,27,,,,0,0,0,,,
+OL-SEQ2-2021,2/06/21,,,4.3,3.6,4.8,3.5,,7,Y,14.2,84.8,,35,66,39,25,,,0.022,0,0,0,,
+OL-SEQ3-2021,2/06/21,,2.5,3,5,4.5,4.5,,11,N,14.9,79.1,40,41,51,66,70,,0.083,0.038,0,0,0,,"velocity meter struggled to move despite obvious flow at head, surface flow at head was 0.110, took new width and VD at head (W0, VD0)"
+SG-SEQ1-2021,5/06/21,,,3,3.3,2.4,,,4.5,Y,14.8,78.3,,17,26,25.5,20,,,0.023,0,0,0,,VD1 is surface velocity
+SG-SEQ2-2021,5/06/21,,,3.4,3.8,7.5,2.7,,6,Y,13.8,43.7,,18,65,35,72,26.5,,0.038,0,0,0,0,
+SG-SEQ3-2021,5/06/21,,,2,7.2,4.3,3.5,,4.5,Y,14.8,71.9,,13,36,76,39,48.5,,0.061,0,0,0,0,VD1 is surface velocity
 ,,,,,,,,,,,,,,,,,,,,,,,,,
 DG-SEQ1-2021,28/07/21,,,0.9,1,3.7,,,0,removed,14.3,8.1,,3,9,18,,,,0,0,0,,,
 DG-SEQ2-2021,28/07/21,,,3.7,3.1,,,,0,removed,14.4,12,,25,54,55,,,,0,0,0,,,
@@ -59,9 +59,9 @@ LAG1-SEQ3-2021,12/09/21,,,6.3,7.3,7.8,,,16,Y,16.7,98.5,,39,52,47,57,,,0.031,0.08
 LAG2-SEQ1-2021,11/09/21,,,7.9,5.6,7.1,8.3,,16,Y,17.9,97.6,,55,63,53,49,,,0.412,0.205,0.15,0.129,,no change
 LAG2-SEQ2-2021,11/09/21,,,8.3,7.9,10,10.2,,20,Y,17.7,98,,93,85,64,44,43,,0.064,0.057,0,0.097,0.019,"VD3 on RB by overhanging branches, might not be part of of continuous thalweg but just max depth in that cross-section"
 LAG2-SEQ3-2021,11/09/21,,,6.7,6,6.4,,,20,unmarked,17.6,92.8,,54,41,41,,,,0.174,0.075,0.072,,,"first VD not at very head where riffle pours in, but just d/s (d/s end of big tree) where both flow paths converge"
-LAG1-SEQ2-2021,09/10/21,,,6.5,7,6,,,13,Y,14.1,98.8,,50,44,24,,,,0.262,0.185,0.234,,,"length same as May, first VD just d/s of log, then by stump, then tail end of pool (more of a glide)"
-LAG1-SEQ3-2021,09/10/21,,,5.5,6.7,8.5,8.5,,17,Y,14.1,98.1,,43,52,52,42,,,0.202,0.11,0.055,0.097,,
-LAG1-SEQ1-2021,09/10/21,,,3.2,5.8,8.7,8.3,,15,Y,14.2,99.5,,64,68,74,78,,,0.2,0.141,0.089,0.086,,"length same as May; first measurement just u/s of log, next one just downstream, third by temp logger and final at the willows near tail-end of pool"
+LAG1-SEQ2-2021,9/10/21,,,6.5,7,6,,,13,Y,14.1,98.8,,50,44,24,,,,0.262,0.185,0.234,,,"length same as May, first VD just d/s of log, then by stump, then tail end of pool (more of a glide)"
+LAG1-SEQ3-2021,9/10/21,,,5.5,6.7,8.5,8.5,,17,Y,14.1,98.1,,43,52,52,42,,,0.202,0.11,0.055,0.097,,
+LAG1-SEQ1-2021,9/10/21,,,3.2,5.8,8.7,8.3,,15,Y,14.2,99.5,,64,68,74,78,,,0.2,0.141,0.089,0.086,,"length same as May; first measurement just u/s of log, next one just downstream, third by temp logger and final at the willows near tail-end of pool"
 LAG2-SEQ1-2021,10/10/21,,,7.2,5.6,7.4,,,18,Y,14.8,94.1,,52,60,47,,,,0.374,0.183,0.114,,,"first DV at head u/s of root wad, next one at root wad (cam 1), third near end of SWD, mid-pool (cam 2)"
 LAG2-SEQ3-2021,10/10/21,,,6.6,5.6,6,,,20,,15.5,94,,54,43,41,,,,0.2,0.112,0.174,,,
 LAG2-SEQ2-2021,10/10/21,,,8.6,7.5,10.6,8.2,,23,,14.9,93.8,,89,79,63,42,39,,0.168,0.059,0,0.074,0.046,"first one b/w logs, second just d/s of logs in SWD, third by RB overhanging branches, fourth mid-pool along RB, last one by log at d/s end"

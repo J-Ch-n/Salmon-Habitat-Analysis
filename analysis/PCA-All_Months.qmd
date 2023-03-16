@@ -1,0 +1,133 @@
+---
+title: "PCA-All_Months"
+author: "Jiashu Chen"
+format: html
+editor: visual
+---
+
+```{r, warning=FALSE, message=FALSE}
+# Load Packages
+library(tidyverse)
+library(vegan)
+library(lubridate)
+# Set Working Directory
+setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
+
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Load Data Sets
+lag21_hab_may_oct <- read_csv("LAG21_Habitat_May_Oct.csv")
+lag21_shelter <- read_csv("LAG21_InstreamShelter.csv")
+
+#Filter to retain only May sites
+#Clean up data, calculate Vol, max_temp, max_do, max_vel, max_rctdepth
+
+#Remove space and parentheses
+names(lag21_hab_may_oct) <- str_replace_all(names(lag21_hab_may_oct), c(" " = "", "\\(DD/MM/YY\\)" = ""))
+#Remove space and parentheses
+names(lag21_shelter) <- str_replace_all(names(lag21_shelter), c(" " = "", "\\(0\\-3\\)" = ""))
+
+
+# view(lag21_hab_may_oct)
+# lag21_hab_may_oct[7, 2] = '02/05/21' 
+# temp0 <- lag21_hab_may_oct %>% 
+#   #mutate(SiteName = str_replace(SiteName, "DG1", "DG")) %>%
+#   filter(!grepl("^SG|^DG1", SiteName)) %>% 
+#   inner_join(lag21_hab_may_oct, 
+#              by = join_by(SiteName == SiteName)) %>% 
+#   drop_na(Length_m.x) %>% 
+#   select(c("SiteName","Length_m.x", -"Length_m.y", str_replace_all(colnames(lag21_hab_may_oct)[c(-1, -3)], "$", ".y"))) %>%
+#   view()
+# 
+# temp1 <- lag21_hab_may_oct %>% #add the edge cases
+#   filter(grepl("^SG", SiteName), Date != '16/10/21') %>% 
+#   inner_join(lag21_hab_may_oct, 
+#              by = join_by(SiteName == SiteName)) %>% 
+#   drop_na(Length_m.x) %>% 
+#   select(c("SiteName","Length_m.x", -"Length_m.y", str_replace_all(colnames(lag21_hab_may_oct)[c(-1, -3)], "$", ".y"))) %>%
+#   rbind(lag21_hab_may_oct %>% 
+#           filter(grepl("^SG", lag21_hab_may_oct$SiteName) & Date == '16/10/21') | grepl("^DG1", lag21_hab_may_oct$StieName)) %>% 
+#   view()
+# 
+# colnames(temp1) <- str_replace_all(colnames(lag21_hab_may_oct)[-1], "$", ".y")
+# 
+# view(temp1) 
+  
+
+#Clean up data and select useful data columns
+###Replaced na with 0###
+clean_lag21_hab_shelter <- lag21_hab_may_oct  %>% 
+  drop_na(Date) %>%
+  mutate(Date = dmy(Date)) %>% 
+  mutate(Month = month(Date),
+         Month = case_when(
+           Month == 4 ~ 5,
+           TRUE ~ Month
+         )) %>% 
+  mutate(across(c(Width3_m, Length_m), as.double)) %>% 
+  mutate(Length_m = case_when(
+    SiteName == "DG1-SEQ1-2021" ~ 7.1,
+    SiteName == "DG1-SEQ2-2021" ~ 5.6,
+    SiteName %in% c("DG1-SEQ3-2021", "DG-SEQ3-2021")  ~ 6.3,
+    SiteName == "LAG1-SEQ1-2021" ~ 30.5,
+    SiteName == "LAG1-SEQ2-2021" ~ 18,
+    SiteName == "LAG1-SEQ3-2021" ~ 37,
+    SiteName == "LAG2-SEQ1-2021" ~ 11.1,
+    SiteName == "LAG2-SEQ2-2021" ~ 34.5,
+    SiteName == "LAG2-SEQ3-2021" ~ 22.7,
+    SiteName == "OL-SEQ1-2021" ~ 13.4,
+    SiteName == "OL-SEQ2-2021" ~ 22.1,
+    SiteName == "OL-SEQ3-2021" ~ 17.8, 
+    SiteName == "SG-SEQ1-2021" & Month != 10 ~ 9.5,
+    SiteName == "SG-SEQ2-2021" & Month != 10 ~ 40.3,
+    SiteName == "SG-SEQ3-2021" & Month != 10 ~ 58.4, 
+    #SG has site absent from the dataframe. Dried?
+    SiteName == "SG-SEQ2-2021" & Month == 10 ~ 9, 
+    SiteName == "DG-SEQ2-2021" ~ 2.5,
+    SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
+    TRUE ~ Length_m
+    #(11 + 7)/2 = 9
+    )) %>% 
+  group_by(SiteName, Month) %>% 
+  rowwise() %>% 
+  mutate(Max_vel = max(c_across(c(Vel0_ms, 
+                                  Vel1_ms, 
+                                  Vel2_ms, 
+                                  Vel3_ms, 
+                                  Vel4_ms, 
+                                  Vel5_ms)), 
+                       na.rm = T)) %>%
+  
+  ###Change 31 of may to 1 of june; repeat any empty length with previous values.###
+  mutate(Median_width_m = mean(c_across(c(Width0_m, 
+                                     Width1_m,
+                                     Width2_m, 
+                                     Width3_m, 
+                                     Width4_m,
+                                     Width5_m)),
+                          na.rm = T)) %>% 
+  mutate(Median_depth_m = median(c_across(c(Depth0_cm, 
+                                     Depth1_cm,
+                                     Depth2_cm, 
+                                     Depth3_cm,
+                                     Depth4_cm,
+                                     Depth5_cm)),
+                          na.rm = T) / 100) %>% 
+  mutate(Vol_m3 = Length_m * Median_depth_m * Median_width_m) %>%
+  left_join(lag21_shelter, #Use left join to preserve major data rows.
+             by = join_by(SiteName == SiteName),
+             suffix = c('.hab', '.shelter')) %>%
+  mutate(Canopy_total = (Canopy_Head + Canopy_Mid) / 2,  
+         DO_Percent = as.double(DO_Percent),
+         Temperature_C = as.double(Temperature_C)) %>% 
+  select(SiteName, Date, Shelter_Value, 
+         Vol_m3, Temperature_C, DO_Percent,
+         Max_vel, RCTdepth_cm, Canopy_total)
+
+view(clean_lag21_hab_shelter)
+```
+
+```{r}
+#PCA Chunk
+```
