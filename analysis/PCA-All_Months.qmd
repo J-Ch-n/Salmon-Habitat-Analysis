@@ -55,16 +55,45 @@ names(lag21_shelter) <- str_replace_all(names(lag21_shelter), c(" " = "", "\\(0\
 # view(temp1) 
   
 
+convert_to_avg <- function(col) {
+  
+   result = c()
+   for (cell in col) {
+     
+      if (any(str_detect(cell, "\\d+ \\(.*\\)"), na.rm = T)) {
+        num = as.double(unlist(str_extract_all(cell, "(\\d+\\.\\d+)")))
+        cell = mean(num)
+        #print(c(num, cell))
+      } else if (any(str_detect(cell, "\\d+m"), na.rm = T)) {
+        num = as.double(unlist(str_extract_all(cell, "\\d+")))
+        cell = mean(num) 
+        #print(c(num, cell))
+      }
+     
+      result = c(result, cell)
+   }
+   return(result)
+}
+
+clean_date <- function(date) {
+  date = ifelse(str_detect(date, "&"), str_replace(date, ".+& ", ''), date)
+  return(date)
+}
+
 #Clean up data and select useful data columns
 ###Replaced na with 0###
 clean_lag21_hab_shelter <- lag21_hab_may_oct  %>% 
   drop_na(Date) %>%
-  mutate(Date = dmy(Date)) %>% 
+  mutate(Date = dmy(clean_date(Date))) %>% 
+  mutate(Length_m = convert_to_avg(Length_m),
+         DO_Percent = convert_to_avg(DO_Percent),
+         Temperature_C = convert_to_avg(Temperature_C)) %>%
   mutate(Month = month(Date),
          Month = case_when(
            Month == 4 ~ 5,
            TRUE ~ Month
          )) %>% 
+  mutate(SiteName = str_replace(SiteName, "^DG-", "DG1-")) %>% 
   mutate(across(c(Width3_m, Length_m), as.double)) %>% 
   mutate(Length_m = case_when(
     SiteName == "DG1-SEQ1-2021" ~ 7.1,
@@ -83,9 +112,9 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     SiteName == "SG-SEQ2-2021" & Month != 10 ~ 40.3,
     SiteName == "SG-SEQ3-2021" & Month != 10 ~ 58.4, 
     #SG has site absent from the dataframe. Dried?
-    SiteName == "SG-SEQ2-2021" & Month == 10 ~ 9, 
-    SiteName == "DG-SEQ2-2021" ~ 2.5,
-    SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
+    SiteName == "SG-SEQ2-2021" & Month == 10 ~ 9, #11 + 7 = 18 18 / 2 = 9
+    # SiteName == "DG-SEQ2-2021" & Month == ~ 2.5,
+    # SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
     TRUE ~ Length_m
     #(11 + 7)/2 = 9
     )) %>% 
@@ -123,8 +152,9 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
          Temperature_C = as.double(Temperature_C)) %>% 
   select(SiteName, Date, Shelter_Value, 
          Vol_m3, Temperature_C, DO_Percent,
-         Max_vel, RCTdepth_cm, Canopy_total)
-
+         Max_vel, RCTdepth_cm, Canopy_total) %>% 
+  drop_na() #can be replaced with na = 0
+            #replace(is.na(.), 0)
 view(clean_lag21_hab_shelter)
 ```
 
