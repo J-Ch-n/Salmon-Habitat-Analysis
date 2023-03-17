@@ -54,7 +54,8 @@ names(lag21_shelter) <- str_replace_all(names(lag21_shelter), c(" " = "", "\\(0\
 # 
 # view(temp1) 
   
-
+# Converts irregular data entries into average of their numeric values.
+# "5.5 (a) and 4.5 (b)" => mean(c(5.5, 4.5))
 convert_to_avg <- function(col) {
   
    result = c()
@@ -73,8 +74,12 @@ convert_to_avg <- function(col) {
    return(result)
 }
 
+# Only select the first date entry a cell (before &). Convert character columns into date columns. Change 31 of May to 1 of June and April dates to May
 clean_date <- function(date) {
-  date = ifelse(str_detect(date, "&"), str_replace(date, ".+& ", ''), date)
+  date <- ifelse(str_detect(date, "&"), str_replace(date, ".+& " , ''), date)
+  date <- ifelse(str_detect(date, "^0?4//"), str_replace(date, "5//"), date)
+  date <- ifelse(str_detect(date, "^0?5//31//"), str_replace(date, "6//01//"), date)
+  date <- dmy(date)
   return(date)
 }
 
@@ -82,15 +87,16 @@ clean_date <- function(date) {
 ###Replaced na with 0###
 clean_lag21_hab_shelter <- lag21_hab_may_oct  %>% 
   drop_na(Date) %>%
-  mutate(Date = dmy(clean_date(Date))) %>% 
+  mutate(Date = clean_date(Date)) %>% 
   mutate(Length_m = convert_to_avg(Length_m),
          DO_Percent = convert_to_avg(DO_Percent),
          Temperature_C = convert_to_avg(Temperature_C)) %>%
-  mutate(Month = month(Date),
-         Month = case_when(
-           Month == 4 ~ 5,
-           TRUE ~ Month
-         )) %>% 
+  mutate(Month = month(Date)) %>% 
+  # mutate(Month = month(Date),
+  #        Month = case_when(
+  #          Month == 4 ~ 5,
+  #          TRUE ~ Month
+  #        )) %>% 
   mutate(SiteName = str_replace(SiteName, "^DG-", "DG1-")) %>% 
   mutate(across(c(Width3_m, Length_m), as.double)) %>% 
   mutate(Length_m = case_when(
@@ -114,7 +120,6 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     # SiteName == "DG-SEQ2-2021" & Month == ~ 2.5,
     # SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
     TRUE ~ Length_m
-    #(11 + 7)/2 = 9
     )) %>%
   arrange(Month, SiteName) %>%
   rowwise() %>% 
@@ -151,7 +156,8 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   select(SiteName, Date, Vol_m3, 
          Temperature_C, DO_Percent,
          Max_vel, RCTdepth_cm) %>% #exclude shelter and canopy
-  #drop_na() %>% #can be replaced with na = 0
+  #drop_na() 
+  #can be replaced with na = 0
   replace(is.na(.), 0)
 view(clean_lag21_hab_shelter)
 ```
