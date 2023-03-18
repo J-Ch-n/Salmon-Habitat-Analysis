@@ -8,8 +8,10 @@ editor: visual
 ```{r, warning=FALSE, message=FALSE}
 # Load Packages
 library(tidyverse)
+library(ggfortify)
 library(vegan)
 library(lubridate)
+library(factoextra)
 # Set Working Directory
 setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
 
@@ -74,24 +76,39 @@ convert_to_avg <- function(col) {
    return(result)
 }
 
+get_site <- function(col) {
+  result <- c()
+  for (i in col) {
+    i <- str_sub(str_extract(i,"^\\w+\\-"), 1, -2)
+    #print(i)
+    if (i == "DG") {
+      i <- "DG1"
+    }
+    result = c(result, i)
+  }
+  return(result)  
+}
+
 # Only select the first date entry a cell (before &). Convert character columns into date columns. Change 31 of May to 1 of June and April dates to May
 clean_date <- function(date) {
-  date <- ifelse(str_detect(date, "&"), str_replace(date, ".+& " , ''), date)
-  date <- ifelse(str_detect(date, "^0?4//"), str_replace(date, "5//"), date)
-  date <- ifelse(str_detect(date, "^0?5//31//"), str_replace(date, "6//01//"), date)
+  date <- ifelse(str_detect(date, "&"), str_replace(date, ".+& ", ''), date)
+  date <- ifelse(str_detect(date, "/0?4/"), str_replace(date, "/0?4/", "/05/"), date) #Replace april with may
+  date <- ifelse(str_detect(date, "^31/0?5/"), str_replace(date, "^31/0?5/", "1/05/"), date) #Replace may 31 with jun 1.
   date <- dmy(date)
   return(date)
 }
 
 #Clean up data and select useful data columns
 ###Replaced na with 0###
+###DG1 => DG###
 clean_lag21_hab_shelter <- lag21_hab_may_oct  %>% 
   drop_na(Date) %>%
+  mutate(Site = as.factor(get_site(SiteName))) %>% 
   mutate(Date = clean_date(Date)) %>% 
-  mutate(Length_m = convert_to_avg(Length_m),
-         DO_Percent = convert_to_avg(DO_Percent),
+  mutate(DO_Percent = convert_to_avg(DO_Percent),
          Temperature_C = convert_to_avg(Temperature_C)) %>%
-  mutate(Month = month(Date)) %>% 
+  #Length_m = convert_to_avg(Length_m),
+  mutate(Month = as.factor(month(Date))) %>% 
   # mutate(Month = month(Date),
   #        Month = case_when(
   #          Month == 4 ~ 5,
@@ -99,6 +116,7 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   #        )) %>% 
   mutate(SiteName = str_replace(SiteName, "^DG-", "DG1-")) %>% 
   mutate(across(c(Width3_m, Length_m), as.double)) %>% 
+  ###Repeat any empty length with previous values.###
   mutate(Length_m = case_when(
     SiteName == "DG1-SEQ1-2021" ~ 7.1,
     SiteName == "DG1-SEQ2-2021" ~ 5.6,
@@ -115,10 +133,10 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     SiteName == "SG-SEQ1-2021" & Month != 10 ~ 9.5,
     SiteName == "SG-SEQ2-2021" & Month != 10 ~ 40.3,
     SiteName == "SG-SEQ3-2021" & Month != 10 ~ 58.4, 
-    #SG has site absent from the dataframe. Dried?
-    SiteName == "SG-SEQ2-2021" & Month == 10 ~ 9, #11 + 7 = 18 18 / 2 = 9
-    # SiteName == "DG-SEQ2-2021" & Month == ~ 2.5,
-    # SiteName == "DG-SEQ1-2021" ~ 2.6,  #Don't know DG vs DG1
+    #SG has seq1 Octobor absent from the dataframe. Dried?
+    SiteName == "SG-SEQ2-2021" & Month == 10 ~ 18, #11 + 7 = 18 18 / 2 = 9
+    SiteName == "DG-SEQ2-2021" & Month == 10~ 2.5,
+    SiteName == "DG-SEQ1-2021" & Month == 10 ~ 2.6,  #Don't know DG vs DG1
     TRUE ~ Length_m
     )) %>%
   arrange(Month, SiteName) %>%
@@ -131,7 +149,6 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
                                   Vel5_ms)),
                                   0), 
                        na.rm = T)) %>%
-  ###Change 31 of may to 1 of june; repeat any empty length with previous values.###
   mutate(Median_width_m = mean(c_across(c(Width0_m, 
                                      Width1_m,
                                      Width2_m, 
@@ -153,22 +170,33 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   mutate(Canopy_total = (Canopy_Head + Canopy_Mid) / 2,  
          DO_Percent = as.double(DO_Percent),
          Temperature_C = as.double(Temperature_C)) %>% 
-  select(SiteName, Date, Vol_m3, 
+  select(SiteName, Date, Month, Vol_m3, 
          Temperature_C, DO_Percent,
-         Max_vel, RCTdepth_cm) %>% #exclude shelter and canopy
-  #drop_na() 
-  #can be replaced with na = 0
-  replace(is.na(.), 0)
+         Max_vel, RCTdepth_cm, Site, Length_m) %>% #exclude shelter and canopy
+  
+  drop_na(Temperature_C)
+
+#replace(is.na(.), 0)] 
 view(clean_lag21_hab_shelter)
+write_csv(clean_lag21_hab_shelter, "CLEAN_habitat.csv")
 ```
 
 ```{r}
 #PCA Chunk
-results <- clean_lag21_hab_shelter %>% 
- select(-SiteName, -Date) %>% 
+clean_habitat <- read_csv("CLEAN_habitat.csv")
+clean_habitat <- clean_habitat %>% 
+  mutate(Month = as.factor(Month)) %>% 
+ mutate(Site = as.factor(Site))
+all_month_pca <- clean_habitat %>% 
+ select(-SiteName, -Date, -Month, -Site, -Length_m) %>% 
  prcomp(scale = T)
-  
-  
-results$rotation <- -1*results$rotation
-results$rotation
+
+all_month_pca$x # pc score
+scores(all_month_pca$rotation)
+biplot(all_month_pca, scale = 0) # preliminary plot 
+autoplot(all_month_pca, data = clean_habitat, colour = 'Site', shape = 'Month', loadings = TRUE, loadings.label = TRUE)
 ```
+
+Make prettier background, color, legends, label bigger, pca arrow prettier
+
+Install packages
