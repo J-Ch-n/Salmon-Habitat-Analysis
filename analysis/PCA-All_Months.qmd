@@ -11,7 +11,10 @@ library(tidyverse)
 library(ggfortify)
 library(vegan)
 library(lubridate)
-library(factoextra)
+library(ggfortify)
+library(ggrepel)
+library(patchwork)
+#library(factoextra)
 # Set Working Directory
 setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
 
@@ -135,7 +138,7 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     SiteName == "SG-SEQ3-2021" & Month != 10 ~ 58.4, 
     #SG has seq1 Octobor absent from the dataframe. Dried?
     SiteName == "SG-SEQ2-2021" & Month == 10 ~ 18, #11 + 7 = 18 18 / 2 = 9
-    SiteName == "DG-SEQ2-2021" & Month == 10~ 2.5,
+    SiteName == "DG-SEQ2-2021" & Month == 10 ~ 2.5,
     SiteName == "DG-SEQ1-2021" & Month == 10 ~ 2.6,  #Don't know DG vs DG1
     TRUE ~ Length_m
     )) %>%
@@ -191,10 +194,89 @@ all_month_pca <- clean_habitat %>%
  select(-SiteName, -Date, -Month, -Site, -Length_m) %>% 
  prcomp(scale = T)
 
-all_month_pca$x # pc score
-scores(all_month_pca$rotation)
-biplot(all_month_pca, scale = 0) # preliminary plot 
-autoplot(all_month_pca, data = clean_habitat, colour = 'Site', shape = 'Month', loadings = TRUE, loadings.label = TRUE)
+all_month_pca$x #pc scores
+#scores(all_month_pca$rotation)
+#biplot(all_month_pca, scale = 0) #preliminary plot 
+#autoplot(all_month_pca, data = clean_habitat, colour = 'Site', shape = 'Month', loadings = #TRUE, loadings.label = TRUE)
+
+# Graph PCA
+graph_pca <- clean_habitat
+graph_pca$pc1 <- all_month_pca$x[,1]
+graph_pca$pc2 <- all_month_pca$x[,2]
+
+p <- ggplot(data = graph_pca, 
+            aes(x = pc1, 
+                y = pc2, 
+                color = Site,
+                shape = Month)) +
+  geom_point(size = 3, 
+             alpha = 0.6, 
+             fill = "black") +  ### need to do stuff here
+  coord_equal() + 
+  xlab("PC 1") +
+  ylab("PC 2") +
+  theme_minimal()
+
+p
+# Construction variable contribution plot
+# Source https://tem11010.github.io/Plotting-PCAs/
+
+pca_vars <- all_month_pca$rotation %>% data.frame
+pca_vars$vars <- rownames(pca.vars)
+pca_vars_long <- pca_vars %>% 
+  pivot_longer(
+    cols = !vars,
+    names_to = "PC"
+  )
+
+# Source https://tem11010.github.io/Plotting-PCAs/
+circleFun <- function(center, diameter, npoints){
+  r = diameter / 2
+  tt <- seq(0,2*pi,length.out = npoints)
+  xx <- center[1] + r * cos(tt)
+  yy <- center[2] + r * sin(tt)
+  return(data.frame(x = xx, y = yy))
+}
+
+circ <- circleFun(c(0,0),2,npoints = 500)
+
+# Plot variable contribution
+vars_p <- ggplot() +
+  geom_path(data = circ, aes(x,y), lty = 2, color = "grey", alpha = 0.7) +
+  geom_hline(yintercept = 0, lty = 2, color = "grey", alpha = 0.9) +
+  geom_vline(xintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
+  geom_segment(data = pca_vars, 
+               aes(x = 0, xend = pca_vars$PC1,
+                   y = 0, yend = pca_vars$PC2,
+                   color = as.factor(pca_vars$vars)),
+               arrow = arrow(length = unit(0.025, "npc"),
+                             type = "open"),
+               lwd = 1) + 
+  # geom_text_repel(data = pca_vars,
+  #           aes(x = pca_vars$PC1 * 1.15,
+  #               y = pca_vars$PC2 * 1.15,
+  #               label = as.vector(pca_vars$vars))
+  #           ) +
+  xlab("PC 1") +
+  ylab("PC 2") +
+  labs(color = "Principle Component Vectors") +
+  coord_equal() + 
+  theme_minimal()
+
+
+p + vars_p
+
+# geom_text(data = pca_vars,
+#             aes(x = pca_vars$PC1 * 1.15,
+#                 y = pca_vars$PC2 * 1.15,
+#                 label = as.vector(pca_vars$vars),
+#                 size = )) +
+
+
+
+
+
+
 ```
 
 Make prettier background, color, legends, label bigger, pca arrow prettier
