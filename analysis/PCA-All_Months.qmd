@@ -215,9 +215,14 @@ p <- ggplot(data = graph_pca,
   coord_equal() + 
   xlab("PC 1") +
   ylab("PC 2") +
-  theme_minimal()
+  labs(title = "All Month PCA") +
+  theme_minimal() + 
+  theme(legend.key.height = unit(2, 'mm'),
+        legend.key.width = unit(2, 'mm'),
+        legend.position = 'left',
+        plot.title = element_text(hjust = 0.5)
+        )
 
-p
 # Construction variable contribution plot
 # Source https://tem11010.github.io/Plotting-PCAs/
 
@@ -230,7 +235,7 @@ pca_vars_long <- pca_vars %>%
   )
 
 # Source https://tem11010.github.io/Plotting-PCAs/
-circleFun <- function(center, diameter, npoints){
+circleFun <- function(center, diameter, npoints) {
   r = diameter / 2
   tt <- seq(0,2*pi,length.out = npoints)
   xx <- center[1] + r * cos(tt)
@@ -262,8 +267,9 @@ vars_p <- ggplot() +
   labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal()
+  
 
-
+p
 p + vars_p
 
 # geom_text(data = pca_vars,
