@@ -3,6 +3,8 @@ title: "PCA-All_Months"
 author: "Jiashu Chen"
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, warning=FALSE, message=FALSE}
@@ -96,7 +98,7 @@ get_site <- function(col) {
 clean_date <- function(date) {
   date <- ifelse(str_detect(date, "&"), str_replace(date, ".+& ", ''), date)
   date <- ifelse(str_detect(date, "/0?4/"), str_replace(date, "/0?4/", "/05/"), date) #Replace april with may
-  date <- ifelse(str_detect(date, "^31/0?5/"), str_replace(date, "^31/0?5/", "1/05/"), date) #Replace may 31 with jun 1.
+  date <- ifelse(str_detect(date, "^31/0?5/"), str_replace(date, "^31/0?5/", "1/06/"), date) #Replace may 31 with jun 1.
   date <- dmy(date)
   return(date)
 }
@@ -199,7 +201,24 @@ all_month_pca$x #pc scores
 #biplot(all_month_pca, scale = 0) #preliminary plot 
 #autoplot(all_month_pca, data = clean_habitat, colour = 'Site', shape = 'Month', loadings = #TRUE, loadings.label = TRUE)
 
+```
+
+Make prettier background, color, legends, label bigger, pca arrow prettier
+
+Install packages -
+
+Color blind friendly colors --
+
+Embed vectors or else
+
+Track site seq shifts with arrows (one graph for each site)
+
+Shorten pc name and move label around -
+
+```{r}
 # Graph PCA
+safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
+                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
 graph_pca <- clean_habitat
 graph_pca$pc1 <- all_month_pca$x[,1]
 graph_pca$pc2 <- all_month_pca$x[,2]
@@ -210,18 +229,19 @@ p <- ggplot(data = graph_pca,
                 color = Site,
                 shape = Month)) +
   geom_point(size = 3, 
-             alpha = 0.6, 
+             alpha = 0.9, 
              fill = "black") +  ### need to do stuff here
+  scale_color_manual(values = safe_colorblind_palette) +
   coord_equal() + 
   xlab("PC 1") +
   ylab("PC 2") +
-  labs(title = "All Month PCA") +
+  #labs(title = "All Month PCA") +
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
         legend.key.width = unit(2, 'mm'),
         legend.position = 'left',
         plot.title = element_text(hjust = 0.5)
-        )
+        ) 
 
 # Construction variable contribution plot
 # Source https://tem11010.github.io/Plotting-PCAs/
@@ -234,6 +254,7 @@ pca_vars_long <- pca_vars %>%
     names_to = "PC"
   )
 
+                             
 # Source https://tem11010.github.io/Plotting-PCAs/
 circleFun <- function(center, diameter, npoints) {
   r = diameter / 2
@@ -257,6 +278,7 @@ vars_p <- ggplot() +
                arrow = arrow(length = unit(0.025, "npc"),
                              type = "open"),
                lwd = 1) + 
+  scale_color_manual(values = safe_colorblind_palette) +
   # geom_text_repel(data = pca_vars,
   #           aes(x = pca_vars$PC1 * 1.15,
   #               y = pca_vars$PC2 * 1.15,
@@ -269,22 +291,26 @@ vars_p <- ggplot() +
   theme_minimal()
   
 
-p
-p + vars_p
 
+
+p + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect")
+#p + inset_element(vars_p, left = 0.6, bottom = 0.6, right = 1, top = 1)
 # geom_text(data = pca_vars,
 #             aes(x = pca_vars$PC1 * 1.15,
 #                 y = pca_vars$PC2 * 1.15,
 #                 label = as.vector(pca_vars$vars),
 #                 size = )) +
 
+```
 
-
+```{r}
+# Explore tracing arrows
+safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
+                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+graph_pca <- clean_habitat
+graph_pca$pc1 <- all_month_pca$x[,1]
+graph_pca$pc2 <- all_month_pca$x[,2]
 
 
 
 ```
-
-Make prettier background, color, legends, label bigger, pca arrow prettier
-
-Install packages
