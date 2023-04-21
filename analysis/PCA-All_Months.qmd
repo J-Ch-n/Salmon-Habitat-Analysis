@@ -69,13 +69,16 @@ convert_to_avg <- function(col) {
    for (cell in col) {
      
       if (any(str_detect(cell, "\\d+ \\(.*\\)"), na.rm = T)) {
-        num = as.double(unlist(str_extract_all(cell, "(\\d+\\,\\d+)")))
+        num = as.double(unlist(str_extract_all(cell, "(\\d+\\.\\d+)")))
         cell = mean(num)
-      } else if (any(str_detect(cell, "\\d+m"), na.rm = T)) {
-        num = as.double(unlist(str_extract_all(cell, "\\d+")))
-        cell = mean(num)
+        print(cell)
+      #.  } else if (any(str_detect(cell, "\\d+\\.\\d+"), na.rm = T)) {
+      #   print(1)
+      #   num = as.double(unlist(str_extract_all(cell, "\\d+\\.\\d+")))
+      #   cell = mean(num)
+      #   print(cell)
       } else if (any(str_detect(cell, "\\d+\\.\\d+, \\d+\\.\\d+"), na.rm = T)) {#Fix this part 
-        num = as.double(unlist(str_extract_all(cell, "\\d+\\.\\d+, \\d+\\.\\d+")))
+        num = as.double(unlist(str_extract_all(cell, "\\d+\\.\\d+")))
         cell = mean(num)
    }
      
@@ -168,6 +171,10 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
                                   Vel5_ms)),
                                   0), 
                        na.rm = T)) %>%
+  mutate(Max_vel = case_when(
+    Site == "OL" & Month %in% c(9,10) ~ 0,
+    TRUE ~ Max_vel
+  )) %>% 
   mutate(Median_width_m = mean(c_across(c(Width0_m, 
                                      Width1_m,
                                      Width2_m, 
@@ -175,14 +182,15 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
                                      Width4_m,
                                      Width5_m)),
                           na.rm = T)) %>% 
-  mutate(Median_depth_m = median(c_across(c(Depth0_cm, 
+  mutate(Max_depth_m = max(replace_na(c_across(c(Depth0_cm, 
                                      Depth1_cm,
                                      Depth2_cm, 
                                      Depth3_cm,
                                      Depth4_cm,
                                      Depth5_cm)),
+                                     0),
                           na.rm = T) / 100) %>% 
-  mutate(Vol_m3 = Length_m * Median_depth_m * Median_width_m) %>%
+  mutate(Vol_m3 = Length_m * Max_depth_m * Median_width_m) %>%
   left_join(lag21_shelter, #Use left join to preserve major data rows.
              by = join_by(SiteName == SiteName),
              suffix = c('.hab', '.shelter')) %>%
@@ -197,12 +205,12 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
 
 #replace(is.na(.), 0)] 
 view(clean_lag21_hab_shelter)
-write_csv(clean_lag21_hab_shelter, "CLEAN_habitat.csv")
+write_csv(clean_lag21_hab_shelter, "correct_clean_habitat_data.csv")
 ```
 
 ```{r}
 #PCA Chunk
-clean_habitat <- read_csv("CLEAN_habitat.csv")
+clean_habitat <- read_csv("correct_clean_habitat_data.csv")
 clean_habitat <- clean_habitat %>% 
   #mutate(Month = as.factor(Month)) %>% 
  mutate(Site = as.factor(Site))
@@ -319,7 +327,7 @@ p + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect"
 
 ```{r}
 # Explore tracing arrows
-want_Site <- c("OL")
+want_Site <- c("SG")
 #want_Site <- c("DG1", "LAG1", "LAG2", "OL", "SG")
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
@@ -386,14 +394,11 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     return(result)
 }
 
-safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
-                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
-pc_component <- c("DO", "Velocity", "RCT Depth", "Tempearture", "Volume")
+safe_colorblind_palette <- c("#999999", "#D55E00", "#CC79A7", "#009E73", "#0072B2")
+pc_component <- c("DO", "Velocity", "RCT Depth", "Temperature", "Volume")
 graph_pca <- clean_habitat
 graph_pca$pc1 <- all_month_pca$x[,1]
 graph_pca$pc2 <- all_month_pca$x[,2]
-
-graph_pca
 
 p_segment <- ggplot(data = graph_pca, 
             aes(x = pc1, 
@@ -413,15 +418,14 @@ p_segment <- ggplot(data = graph_pca,
              arrow = arrow(length = unit(0.03, "npc"),
                        type = "open")) + ## add a function that outputs a matrix of coordinates with input of the data coordinate.
   scale_color_manual(values = safe_colorblind_palette) +
-  coord_equal() + 
+  #coord_equal() + 
   xlab("PC 1") +
   ylab("PC 2") +
   labs(shape = "Month") +
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
         legend.key.width = unit(2, 'mm'),
-        legend.position = 'left',
-        plot.title = element_text(hjust = 0.5)
+        legend.spacing.y = unit(1, 'mm'),
         ) 
 
 # Construction variable contribution plot
@@ -447,6 +451,7 @@ circleFun <- function(center, diameter, npoints) {
 
 circ <- circleFun(c(0,0),2,npoints = 500)
 
+pca_vars
 # Plot variable contribution
 vars_p <- ggplot() +
   geom_path(data = circ, aes(x,y), lty = 2, color = "grey", alpha = 0.7) +
@@ -455,28 +460,45 @@ vars_p <- ggplot() +
   geom_segment(data = pca_vars, 
                aes(x = 0, xend = pca_vars$PC1,
                    y = 0, yend = pca_vars$PC2,
-                   color = as.factor(pca_vars$vars)),
+                   #color = as.factor(pca_vars$vars)),
+                   color = as.factor(c("Vol_m3", 
+                                       "DO_Percent", 
+                                       "Max_vel", 
+                                       "RCTdepth_cm",
+                                       "Temperature_C"))), 
                arrow = arrow(length = unit(0.025, "npc"),
                              type = "open"),
-               lwd = 0.5) + 
-  scale_color_manual(name = "PC Vectors", 
-                     labels = pc_component, 
-                     values = safe_colorblind_palette) +
-  #scale_color_manual(values = safe_colorblind_palette) +
-  # geom_text_repel(data = pca_vars,
-  #           aes(x = pca_vars$PC1 * 1.15,
-  #               y = pca_vars$PC2 * 1.15,
-  #               label = as.vector(pca_vars$vars))
-  #           ) +
-  xlab("PC 1") +
+               lwd = 1) + 
+  scale_color_grey(name = "PCV", 
+                   labels = pc_component, 
+                   start = 0.2, 
+                   end = 0.8) +
+  # scale_color_manual(name = "PC Vectors", 
+  #                    labels = pc_component, 
+  #                    values = safe_colorblind_palette) +
+  # xlab("PC 1") +
   ylab("PC 2") +
   #labs(color = "Principle Component Vectors") +
-  coord_equal() + 
-  theme_minimal()
+  #coord_equal() + 
+  theme_minimal() + 
+  theme(legend.key.height = unit(2, 'mm'),
+        legend.key.width = unit(2, 'mm'),
+        legend.spacing.y = unit(1, 'mm'),
+        ) 
+width <- 10000
+height <- width / 16 * 10
+jpeg("Rplot01.jpg", res = 700, width = width, height = height)
 
-p_segment + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect") & theme(legend.position = 'bottom')
+p_segment + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect") & theme(legend.position = 'right')
 
+dev.off()
 
+layout <- "
+AAAAAAABBB
+AAAAAAABBB
+AAAAAAACCC
+"
+(p_segment | (vars_p / guide_area())) + plot_layout(guides = "collect")
 ```
 
 Color = Month or Shape = Month?
