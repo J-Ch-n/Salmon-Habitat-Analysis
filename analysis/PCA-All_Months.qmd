@@ -10,13 +10,11 @@ editor_options:
 ```{r, warning=FALSE, message=FALSE}
 # Load Packages
 library(tidyverse)
-library(ggfortify)
 library(vegan)
 library(lubridate)
 library(ggfortify)
 library(ggrepel)
 library(patchwork)
-#library(factoextra)
 # Set Working Directory
 setwd("/Users/jiashuchen/salmon-research/sp23-salmon-research/analysis")
 
@@ -35,34 +33,6 @@ names(lag21_hab_may_oct) <- str_replace_all(names(lag21_hab_may_oct), c(" " = ""
 #Remove space and parentheses
 names(lag21_shelter) <- str_replace_all(names(lag21_shelter), c(" " = "", "\\(0\\-3\\)" = ""))
 
-
-# view(lag21_hab_may_oct)
-# lag21_hab_may_oct[7, 2] = '02/05/21' 
-# temp0 <- lag21_hab_may_oct %>% 
-#   #mutate(SiteName = str_replace(SiteName, "DG1", "DG")) %>%
-#   filter(!grepl("^SG|^DG1", SiteName)) %>% 
-#   inner_join(lag21_hab_may_oct, 
-#              by = join_by(SiteName == SiteName)) %>% 
-#   drop_na(Length_m.x) %>% 
-#   select(c("SiteName","Length_m.x", -"Length_m.y", str_replace_all(colnames(lag21_hab_may_oct)[c(-1, -3)], "$", ".y"))) %>%
-#   view()
-# 
-# temp1 <- lag21_hab_may_oct %>% #add the edge cases
-#   filter(grepl("^SG", SiteName), Date != '16/10/21') %>% 
-#   inner_join(lag21_hab_may_oct, 
-#              by = join_by(SiteName == SiteName)) %>% 
-#   drop_na(Length_m.x) %>% 
-#   select(c("SiteName","Length_m.x", -"Length_m.y", str_replace_all(colnames(lag21_hab_may_oct)[c(-1, -3)], "$", ".y"))) %>%
-#   rbind(lag21_hab_may_oct %>% 
-#           filter(grepl("^SG", lag21_hab_may_oct$SiteName) & Date == '16/10/21') | grepl("^DG1", lag21_hab_may_oct$StieName)) %>% 
-#   view()
-# 
-# colnames(temp1) <- str_replace_all(colnames(lag21_hab_may_oct)[-1], "$", ".y")
-# 
-# view(temp1) 
-  
-# Converts irregular data entries into average of their numeric values.
-# "5.5 (a) and 4.5 (b)" => mean(c(5.5, 4.5))
 convert_to_avg <- function(col) {
   
    result = c()
@@ -71,12 +41,6 @@ convert_to_avg <- function(col) {
       if (any(str_detect(cell, "\\d+ \\(.*\\)"), na.rm = T)) {
         num = as.double(unlist(str_extract_all(cell, "(\\d+\\.\\d+)")))
         cell = mean(num)
-        print(cell)
-      #.  } else if (any(str_detect(cell, "\\d+\\.\\d+"), na.rm = T)) {
-      #   print(1)
-      #   num = as.double(unlist(str_extract_all(cell, "\\d+\\.\\d+")))
-      #   cell = mean(num)
-      #   print(cell)
       } else if (any(str_detect(cell, "\\d+\\.\\d+, \\d+\\.\\d+"), na.rm = T)) {#Fix this part 
         num = as.double(unlist(str_extract_all(cell, "\\d+\\.\\d+")))
         cell = mean(num)
@@ -91,7 +55,6 @@ get_site <- function(col) {
   result <- c()
   for (i in col) {
     i <- str_sub(str_extract(i,"^\\w+\\-"), 1, -2)
-    #print(i)
     if (i == "DG") {
       i <- "DG1"
     }
@@ -104,8 +67,6 @@ get_seq <- function(col) {
   result <- c()
   for (i in col) {
     i <- str_sub(str_extract(i,"\\-(\\w+)\\-"), 2, -2)
-    #print(i)
-    
     result = c(result, i)
   }
   return(result)  
@@ -129,13 +90,7 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   mutate(Date = clean_date(Date)) %>% 
   mutate(DO_Percent = convert_to_avg(DO_Percent),
          Temperature_C = convert_to_avg(Temperature_C)) %>%
-  #Length_m = convert_to_avg(Length_m),
-  mutate(Month = month(Date)) %>% 
-  # mutate(Month = month(Date),
-  #        Month = case_when(
-  #          Month == 4 ~ 5,
-  #          TRUE ~ Month
-  #        )) %>% 
+  mutate(Month = month(Date)) %>%
   mutate(SiteName = str_replace(SiteName, "^DG-", "DG1-")) %>% 
   mutate(across(c(Width3_m, Length_m), as.double)) %>% 
   ###Repeat any empty length with previous values.###
@@ -155,10 +110,9 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
     SiteName == "SG-SEQ1-2021" & Month != 10 ~ 9.5,
     SiteName == "SG-SEQ2-2021" & Month != 10 ~ 40.3,
     SiteName == "SG-SEQ3-2021" & Month != 10 ~ 58.4, 
-    #SG has seq1 Octobor absent from the dataframe. Dried?
     SiteName == "SG-SEQ2-2021" & Month == 10 ~ 18, #11 + 7 = 18 18 / 2 = 9
     SiteName == "DG-SEQ2-2021" & Month == 10 ~ 2.5,
-    SiteName == "DG-SEQ1-2021" & Month == 10 ~ 2.6,  #Don't know DG vs DG1
+    SiteName == "DG-SEQ1-2021" & Month == 10 ~ 2.6,  
     TRUE ~ Length_m
     )) %>%
   arrange(Month, SiteName) %>%
@@ -191,7 +145,7 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
                                      0),
                           na.rm = T) / 100) %>% 
   mutate(Vol_m3 = Length_m * Max_depth_m * Median_width_m) %>%
-  left_join(lag21_shelter, #Use left join to preserve major data rows.
+  left_join(lag21_shelter, #Use left outer join to preserve major data rows.
              by = join_by(SiteName == SiteName),
              suffix = c('.hab', '.shelter')) %>%
   mutate(Canopy_total = (Canopy_Head + Canopy_Mid) / 2,  
@@ -200,10 +154,8 @@ clean_lag21_hab_shelter <- lag21_hab_may_oct  %>%
   select(SiteName, Site, Seq, Date, Month, Vol_m3, 
          Temperature_C, DO_Percent,
          Max_vel, RCTdepth_cm, Length_m) %>% #exclude shelter and canopy
-  
   drop_na(Temperature_C)
 
-#replace(is.na(.), 0)] 
 view(clean_lag21_hab_shelter)
 write_csv(clean_lag21_hab_shelter, "correct_clean_habitat_data.csv")
 ```
@@ -220,26 +172,10 @@ all_month_pca <- clean_habitat %>%
 
 print(all_month_pca$x) #pc scores
 summary(all_month_pca)
-#scores(all_month_pca$rotation)
-#biplot(all_month_pca, scale = 0) #preliminary plot 
-#autoplot(all_month_pca, data = clean_habitat, colour = 'Site', shape = 'Month', loadings = #TRUE, loadings.label = TRUE)
-
 ```
 
-Make prettier background, color, legends, label bigger, pca arrow prettier
-
-Install packages -
-
-Color blind friendly colors --
-
-Embed vectors or else
-
-Track site seq shifts with arrows (one graph for each site)
-
-Shorten pc name and move label around -
-
 ```{r}
-# Graph PCA
+# Graph PCA Simple
 safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
                              "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
 graph_pca <- clean_habitat
@@ -268,7 +204,6 @@ p <- ggplot(data = graph_pca,
 
 # Construction variable contribution plot
 # Source https://tem11010.github.io/Plotting-PCAs/
-
 pca_vars <- all_month_pca$rotation %>% data.frame
 pca_vars$vars <- rownames(pca_vars)
 pca_vars_long <- pca_vars %>% 
@@ -277,7 +212,6 @@ pca_vars_long <- pca_vars %>%
     names_to = "PC"
   )
 
-                             
 # Source https://tem11010.github.io/Plotting-PCAs/
 circleFun <- function(center, diameter, npoints) {
   r = diameter / 2
@@ -312,9 +246,6 @@ vars_p <- ggplot() +
   labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal()
-  
-
-
 
 p + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect")
 #p + inset_element(vars_p, left = 0.6, bottom = 0.6, right = 1, top = 1)
@@ -328,23 +259,15 @@ p + vars_p + plot_layout(widths = c(3, 1), heights = c(5, 1), guides = "collect"
 
 ```{r}
 # Explore tracing arrows
-
 all_site <- c("DG1", "LAG1", "LAG2", "OL", "SG")
-print(typeof(all_site))
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(month)
-
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
-        #print(s)
-        # print(want)
-        # print(s)
         if (s %in% want) {
           if (m == 7) {
             m = 9
@@ -359,20 +282,14 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
         } else {
           result <- c(result, NA)
         }
-        #print(pc_pair[1])
     }
-    
-    #print(result)
-    
     return(result)
 }
 
 get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(length(site_name))
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
@@ -391,8 +308,6 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
           result <- c(result, NA)
         }
     }
-    
-    #print(length(result))
     return(result)
 }
 
@@ -409,7 +324,7 @@ p_segment <- ggplot(data = graph_pca,
                 color = Site,
                 shape = as.factor(Month))) +
   geom_point(size = 4, 
-             alpha = 1) + #need to do stuff here
+             alpha = 1) + 
   geom_segment(
              alpha = 0.8,
              linewidth = 0.5,
@@ -419,7 +334,7 @@ p_segment <- ggplot(data = graph_pca,
              yend = get_arrow_ycoordinates(Site, SiteName, Month, graph_pca, want_Site),
              shape = as.factor(Month)),
              arrow = arrow(length = unit(0.03, "npc"),
-                       type = "open")) + ## add a function that outputs a matrix of coordinates with input of the data coordinate.
+                       type = "open")) + 
   scale_color_manual(values = safe_colorblind_palette) +
   coord_equal() + 
   xlab("PC 1") +
@@ -462,7 +377,6 @@ vars_p <- ggplot() +
   geom_segment(data = pca_vars, 
                aes(x = 0, xend = pca_vars$PC1,
                    y = 0, yend = pca_vars$PC2,
-                   #color = as.factor(pca_vars$vars)),
                    color = as.factor(c("Vol_m3", 
                                        "DO_Percent", 
                                        "Max_vel", 
@@ -478,9 +392,8 @@ vars_p <- ggplot() +
   # scale_color_manual(name = "PC Vectors", 
   #                    labels = pc_component, 
   #                    values = safe_colorblind_palette) +
-  # xlab("PC 1") +
+  xlab("PC 1") +
   ylab("PC 2") +
-  #labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
@@ -501,39 +414,19 @@ jpeg(name, res = 700, width = width, height = height)
 p_segment + vars_p + guide_area() + plot_layout(design = layout, guides = "collect")
 
 dev.off()
-
-
-
-
 ```
-
-Color = Month or Shape = Month?
-
-Grey scale?
-
-individual site with arrows per image + 0 arrow image
-
-try to match color
-
-may an inset -\> with a box around the inset
 
 ```{r}
 # Explore tracing arrows
-
 all_site <- c("DG1", "LAG1", "LAG2", "OL", "SG")
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(month)
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
-        #print(s)
-        # print(want)
-        # print(s)
         if (s %in% want) {
           if (m == 7) {
             m = 9
@@ -548,10 +441,7 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
         } else {
           result <- c(result, NA)
         }
-        #print(pc_pair[1])
     }
-    
-    #print(result)
     
     return(result)
 }
@@ -559,9 +449,7 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
 get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(length(site_name))
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
@@ -582,7 +470,6 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
         }
     }
     
-    #print(length(result))
     return(result)
 }
 
@@ -645,8 +532,6 @@ vars_p <- ggplot() +
         ) 
 
 for (want_Site in all_site) {
-  # want_Site = c(kept)
-  # print(want_Site)
   safe_colorblind_palette <- c("#999999", "#D55E00", "#CC79A7", "#009E73", "#0072B2")
   pc_component <- c("DO", "Velocity", "RCT Depth", "Temperature", "Volume")
   graph_pca <- clean_habitat
@@ -696,25 +581,17 @@ for (want_Site in all_site) {
 }
 ```
 
-Zoomed DG Plot
-
 ```{r}
-# Explore tracing arrows
-
+# Zoomed DG Plot
 all_site <- c("DG1")
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(month)
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
-        #print(s)
-        # print(want)
-        # print(s)
         if (s %in% want) {
           if (m == 7) {
             m = 9
@@ -729,20 +606,14 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
         } else {
           result <- c(result, NA)
         }
-        #print(pc_pair[1])
     }
-    
-    #print(result)
-    
     return(result)
 }
 
 get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(length(site_name))
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
@@ -763,7 +634,6 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
         }
     }
     
-    #print(length(result))
     return(result)
 }
 
@@ -798,7 +668,6 @@ vars_p <- ggplot() +
   geom_segment(data = pca_vars, 
                aes(x = 0, xend = pca_vars$PC1,
                    y = 0, yend = pca_vars$PC2,
-                   #color = as.factor(pca_vars$vars)),
                    color = as.factor(c("Vol_m3", 
                                        "DO_Percent", 
                                        "Max_vel", 
@@ -811,12 +680,7 @@ vars_p <- ggplot() +
                    labels = pc_component, 
                    start = 0.2, 
                    end = 0.8) +
-  # scale_color_manual(name = "PC Vectors", 
-  #                    labels = pc_component, 
-  #                    values = safe_colorblind_palette) +
-  # xlab("PC 1") +
   ylab("PC 2") +
-  #labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
@@ -825,8 +689,6 @@ vars_p <- ggplot() +
         ) 
 
 for (want_Site in all_site) {
-  # want_Site = c(kept)
-  # print(want_Site)
   safe_colorblind_palette <- c("#999999", "#D55E00", "#CC79A7", "#009E73", "#0072B2")
   pc_component <- c("DO", "Velocity", "RCT Depth", "Temperature", "Volume")
   graph_pca <- clean_habitat
@@ -841,7 +703,7 @@ for (want_Site in all_site) {
                   color = Site,
                   shape = as.factor(Month))) +
     geom_point(size = 3, 
-               alpha = 1) + #need to do stuff here
+               alpha = 1) + 
     geom_segment(
                alpha = 0.8,
                linewidth = 0.5,
@@ -851,7 +713,7 @@ for (want_Site in all_site) {
                yend = get_arrow_ycoordinates(Site, SiteName, Month, graph_pca, want_Site),
                shape = as.factor(Month)),
                arrow = arrow(length = unit(0.015, "npc"),
-                             type = "open")) + ## add a function that outputs a matrix of   coordinates with input of the data coordinate.
+                             type = "open")) + 
     scale_color_manual(values = safe_colorblind_palette) +
     coord_equal() + 
     xlab("PC 1") +
@@ -879,25 +741,18 @@ for (want_Site in all_site) {
 }
 ```
 
-Plot Without Arrows
-
 ```{r}
-# Explore tracing arrows
+# Plot Without Arrows
 
 all_site <- c("DG1", "LAG1", "LAG2", "OL", "SG")
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(month)
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
-        #print(s)
-        # print(want)
-        # print(s)
         if (s %in% want) {
           if (m == 7) {
             m = 9
@@ -912,20 +767,14 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
         } else {
           result <- c(result, NA)
         }
-        #print(pc_pair[1])
     }
-    
-    #print(result)
-    
     return(result)
 }
 
 get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(length(site_name))
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
@@ -946,7 +795,6 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
         }
     }
     
-    #print(length(result))
     return(result)
 }
 
@@ -982,7 +830,6 @@ vars_p <- ggplot() +
   geom_segment(data = pca_vars, 
                aes(x = 0, xend = pca_vars$PC1,
                    y = 0, yend = pca_vars$PC2,
-                   #color = as.factor(pca_vars$vars)),
                    color = as.factor(c("Vol_m3", 
                                        "DO_Percent", 
                                        "Max_vel", 
@@ -995,12 +842,7 @@ vars_p <- ggplot() +
                    labels = pc_component, 
                    start = 0.2, 
                    end = 0.8) +
-  # scale_color_manual(name = "PC Vectors", 
-  #                    labels = pc_component, 
-  #                    values = safe_colorblind_palette) +
-  # xlab("PC 1") +
   ylab("PC 2") +
-  #labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
@@ -1009,8 +851,6 @@ vars_p <- ggplot() +
         ) 
 
 for (want_Site in all_site) {
-  # want_Site = c(kept)
-  # print(want_Site)
   safe_colorblind_palette <- c("#999999", "#D55E00", "#CC79A7", "#009E73", "#0072B2")
   pc_component <- c("DO", "Velocity", "RCT Depth", "Temperature", "Volume")
   graph_pca <- clean_habitat
@@ -1022,7 +862,7 @@ for (want_Site in all_site) {
                   color = Site,
                   shape = as.factor(Month))) +
     geom_point(size = 3, 
-               alpha = 1) + #need to do stuff here
+               alpha = 1) + 
     geom_segment(
                alpha = 0.8,
                linewidth = 0.5,
@@ -1030,7 +870,7 @@ for (want_Site in all_site) {
                xend = get_arrow_xcoordinates(Site, SiteName, Month, graph_pca, want_Site),
                y = pc2,
                yend = get_arrow_ycoordinates(Site, SiteName, Month, graph_pca, want_Site),
-               shape = as.factor(Month))) + ## add a function that outputs a matrix of   coordinates with input of the data coordinate.
+               shape = as.factor(Month))) + 
     scale_color_manual(values = safe_colorblind_palette) +
     coord_equal() + 
     xlab("PC 1") +
@@ -1059,22 +899,17 @@ for (want_Site in all_site) {
 ```
 
 ```{r}
-# Explore tracing arrows
+# Zoomed Without Arrows
 
 all_site <- c("DG1")
 # Takes in x or y coordinate of the data point and output the (x, xend) and (y, yend) coordinat pairs. The result is a list of tuples. Query for the corresponding record with (pc1, pc2).
 get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(month)
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
-        #print(s)
-        # print(want)
-        # print(s)
         if (s %in% want) {
           if (m == 7) {
             m = 9
@@ -1089,20 +924,15 @@ get_arrow_xcoordinates <- function(site, sitename, month, data, want) {
         } else {
           result <- c(result, NA)
         }
-        #print(pc_pair[1])
     }
-    
-    #print(result)
-    
+
     return(result)
 }
 
 get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
     data <- graph_pca
     result <- c()
-    #print(length(site_name))
     for (i in 1:length(site)) {
-        #print(i)
         m <- month[i]
         s <- site[i]
         sn <- sitename[i]
@@ -1122,8 +952,7 @@ get_arrow_ycoordinates <- function(site, sitename, month, data, want) {
           result <- c(result, NA)
         }
     }
-    
-    #print(length(result))
+
     return(result)
 }
 
@@ -1158,7 +987,6 @@ vars_p <- ggplot() +
   geom_segment(data = pca_vars, 
                aes(x = 0, xend = pca_vars$PC1,
                    y = 0, yend = pca_vars$PC2,
-                   #color = as.factor(pca_vars$vars)),
                    color = as.factor(c("Vol_m3", 
                                        "DO_Percent", 
                                        "Max_vel", 
@@ -1171,12 +999,7 @@ vars_p <- ggplot() +
                    labels = pc_component, 
                    start = 0.2, 
                    end = 0.8) +
-  # scale_color_manual(name = "PC Vectors", 
-  #                    labels = pc_component, 
-  #                    values = safe_colorblind_palette) +
-  # xlab("PC 1") +
   ylab("PC 2") +
-  #labs(color = "Principle Component Vectors") +
   coord_equal() + 
   theme_minimal() + 
   theme(legend.key.height = unit(2, 'mm'),
@@ -1185,8 +1008,6 @@ vars_p <- ggplot() +
         ) 
 
 for (want_Site in all_site) {
-  # want_Site = c(kept)
-  # print(want_Site)
   safe_colorblind_palette <- c("#999999", "#D55E00", "#CC79A7", "#009E73", "#0072B2")
   pc_component <- c("DO", "Velocity", "RCT Depth", "Temperature", "Volume")
   graph_pca <- clean_habitat
@@ -1201,7 +1022,7 @@ for (want_Site in all_site) {
                   color = Site,
                   shape = as.factor(Month))) +
     geom_point(size = 3, 
-               alpha = 1) + #need to do stuff here
+               alpha = 1) +
     geom_segment(
                alpha = 0.8,
                linewidth = 0.5,
@@ -1210,7 +1031,7 @@ for (want_Site in all_site) {
                y = pc2,
                yend = get_arrow_ycoordinates(Site, SiteName, Month, graph_pca, want_Site),
                shape = as.factor(Month)),
-               ) + ## add a function that outputs a matrix of   coordinates with input of the data coordinate.
+               ) + 
     scale_color_manual(values = safe_colorblind_palette) +
     coord_equal() + 
     xlab("PC 1") +

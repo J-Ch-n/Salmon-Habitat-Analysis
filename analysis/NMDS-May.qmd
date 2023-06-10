@@ -7,23 +7,7 @@ editor: visual
 
 ## NMDS Exploratory Analysis For May Habitat Sites
 
-### Data Input
-
-#### Schema
-
--   Canopy
-
--   Shelter
-
--   Vol
-
--   Max_temp
-
--   Max_DO
-
--   Max_vel
-
--   Max_RCTdepth
+### 
 
 ```{r, warning=FALSE, message=FALSE}
 # Load Packages
@@ -123,19 +107,3 @@ orditorp(nmds_lag21, display="sites", air=0.01)
 
 
 ```
-
-PCA: z-score =\> all columns
-
-Group
-
-Color by time
-
-Shape by site
-
-Month =\> factor
-
-Site =\> factor order arb
-
-ggbiplot for plotting
-
-Cleanup length, keep max depth as well, mean(width), med(depth), include all months
